@@ -9,7 +9,9 @@
     "dev:tma": "npm run dev -w apps/tma -- --host 0.0.0.0 --port 5182",
     "dev:dashboard": "npm run dev -w apps/dashboard -- --host 0.0.0.0 --port 5190",
     "build:tma": "npm run build -w apps/tma",
-    "preview:tma": "npm run preview -w apps/tma"
+    "build:dashboard": "npm run build -w apps/dashboard",
+    "preview:tma": "npm run preview -w apps/tma",
+    "preview:dashboard": "npm run preview -w apps/dashboard"
   }
 }
 
