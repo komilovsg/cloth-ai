@@ -15,6 +15,13 @@ export async function getCatalog(): Promise<CatalogListResponse> {
   return { items: MOCK_CATALOG }
 }
 
+export async function getCatalogProduct(productId: string) {
+  await sleep(150)
+  const p = MOCK_CATALOG.find((x) => x.id === productId)
+  if (!p) throw new Error('Товар не найден')
+  return p
+}
+
 export async function createOrder(
   req: CreateOrderRequest,
 ): Promise<CreateOrderResponse> {

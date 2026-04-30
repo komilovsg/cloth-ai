@@ -3,13 +3,22 @@ import { useEffect } from 'react'
 import { useCartStore } from '../features/cart/cart-store'
 import { useTelegram } from '../features/telegram/use-telegram'
 import { IconButton } from '../shared/ui/icon-button'
-import { LuArrowLeft, LuShoppingBag } from 'react-icons/lu'
+import { LuArrowLeft, LuMenu, LuShoppingBag } from 'react-icons/lu'
+import { usePrefsStore } from '../features/preferences/prefs-store'
+import { useMenuDrawer } from './menu-drawer'
 
 export function RootLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const cartCount = useCartStore((s) => s.items.length)
   const tg = useTelegram()
+  const theme = usePrefsStore((s) => s.theme)
+  const { openMenu } = useMenuDrawer()
+
+  useEffect(() => {
+    document.body.style.backgroundColor = theme === 'light' ? '#f4f4f5' : '#0a0a0a'
+    document.body.style.color = theme === 'light' ? '#171717' : '#fafafa'
+  }, [theme])
 
   useEffect(() => {
     if (!tg?.BackButton) return
@@ -55,11 +64,21 @@ export function RootLayout() {
               ? 'Типаж'
               : 'CLOTH.AI'
 
+  const shell =
+    theme === 'light'
+      ? 'min-h-dvh bg-gradient-to-b from-violet-50 via-white to-zinc-100 text-neutral-900'
+      : 'min-h-dvh bg-neutral-950 text-neutral-50'
+
+  const stickyBar =
+    theme === 'light'
+      ? 'sticky top-0 z-10 -mx-4 mb-4 border-b border-neutral-200/80 bg-white/90 px-4 pb-3 pt-2 backdrop-blur'
+      : 'sticky top-0 z-10 -mx-4 mb-4 bg-neutral-950/85 px-4 pb-3 pt-2 backdrop-blur'
+
   return (
-    <div className="min-h-dvh bg-neutral-950 text-neutral-50">
+    <div className={shell}>
       <main className="mx-auto w-full max-w-md px-4 pb-24 pt-4">
         {showBack && (
-          <div className="sticky top-0 z-10 -mx-4 mb-4 bg-neutral-950/80 px-4 pb-3 pt-2 backdrop-blur">
+          <div className={stickyBar}>
             <div className="flex items-center gap-3">
               <IconButton
                 aria-label="Назад"
@@ -73,7 +92,9 @@ export function RootLayout() {
                   {title}
                 </div>
               </div>
-              <div className="w-9 shrink-0" />
+              <IconButton aria-label="Меню" onClick={openMenu} className="shrink-0">
+                <LuMenu className="h-5 w-5" />
+              </IconButton>
             </div>
           </div>
         )}
@@ -87,7 +108,14 @@ export function RootLayout() {
               <IconButton variant="primary" className="rounded-2xl p-4 shadow-xl">
                 <LuShoppingBag className="h-6 w-6" />
               </IconButton>
-              <div className="absolute -right-2 -top-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-neutral-50 px-2 text-xs font-semibold text-neutral-950 ring-2 ring-neutral-950">
+              <div
+                className={[
+                  'absolute -right-2 -top-2 flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs font-semibold ring-2',
+                  theme === 'light'
+                    ? 'bg-violet-600 text-white ring-white'
+                    : 'bg-neutral-50 px-2 text-xs font-semibold text-neutral-950 ring-neutral-950',
+                ].join(' ')}
+              >
                 {cartCount}
               </div>
             </div>
@@ -97,4 +125,3 @@ export function RootLayout() {
     </div>
   )
 }
-

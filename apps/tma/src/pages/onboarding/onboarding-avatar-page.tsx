@@ -8,28 +8,24 @@ const OPTIONS: Array<{
   id: ModelType
   title: string
   desc: string
-  badge: string
   gradient: string
 }> = [
   {
     id: 'tall',
-    title: 'Высокий',
-    desc: 'Рост 185 • стройное телосложение',
-    badge: 'Tall',
+    title: 'Высокий силуэт',
+    desc: 'Рост ~185 см • стройное телосложение',
     gradient: 'from-violet-500/25 via-fuchsia-500/10 to-transparent',
   },
   {
     id: 'mid',
-    title: 'Средний',
-    desc: 'Рост 165 • среднее телосложение',
-    badge: 'Mid',
+    title: 'Средний силуэт',
+    desc: 'Рост ~165 см • среднее телосложение',
     gradient: 'from-sky-500/25 via-cyan-500/10 to-transparent',
   },
   {
     id: 'curvy',
-    title: 'Плотный',
-    desc: 'Рост 175 • плотное телосложение',
-    badge: 'Curvy',
+    title: 'Плотный силуэт',
+    desc: 'Рост ~175 см • более плотное телосложение',
     gradient: 'from-amber-500/25 via-orange-500/10 to-transparent',
   },
 ]
@@ -94,9 +90,6 @@ export function OnboardingAvatarPage() {
                       <div className="truncate text-sm font-semibold">
                         {o.title}
                       </div>
-                      <span className="rounded-full bg-neutral-950 px-2 py-0.5 text-[11px] text-neutral-300 ring-1 ring-white/10">
-                        {o.badge}
-                      </span>
                       {isSelected && (
                         <span className="rounded-full bg-violet-500 px-2 py-0.5 text-[11px] font-semibold text-white">
                           Выбрано

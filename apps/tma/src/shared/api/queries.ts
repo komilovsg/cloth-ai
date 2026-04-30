@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { getCatalog, getOrder } from './api-client'
+import { getCatalog, getCatalogProduct, getOrder } from './api-client'
 
 export const queryKeys = {
   catalog: () => ['catalog'] as const,
+  catalogProduct: (id: string) => ['catalog', 'product', id] as const,
   order: (orderId: string) => ['order', orderId] as const,
 }
 
@@ -10,6 +11,15 @@ export function useCatalogQuery() {
   return useQuery({
     queryKey: queryKeys.catalog(),
     queryFn: getCatalog,
+    staleTime: 60_000,
+  })
+}
+
+export function useCatalogProductQuery(productId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.catalogProduct(productId ?? ''),
+    queryFn: () => getCatalogProduct(productId!),
+    enabled: !!productId,
     staleTime: 60_000,
   })
 }

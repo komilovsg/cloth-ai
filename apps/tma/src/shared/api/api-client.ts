@@ -1,5 +1,6 @@
 import WebApp from '@twa-dev/sdk'
 import type {
+  CatalogItemDto,
   CatalogListResponse,
   CreateOrderRequest,
   CreateOrderResponse,
@@ -60,6 +61,13 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 export async function getCatalog(): Promise<CatalogListResponse> {
   if (getApiMode() === 'mock') return mock.getCatalog()
   return requestJson<CatalogListResponse>('/v1/catalog')
+}
+
+export async function getCatalogProduct(productId: string): Promise<CatalogItemDto> {
+  if (getApiMode() === 'mock') return mock.getCatalogProduct(productId)
+  return requestJson<CatalogItemDto>(
+    `/v1/catalog/product/${encodeURIComponent(productId)}`,
+  )
 }
 
 export async function createOrder(

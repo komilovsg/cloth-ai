@@ -1,15 +1,29 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { setAdminToken } from './auth-gate'
-import { LuLayoutDashboard, LuListOrdered, LuPackage, LuPlus } from 'react-icons/lu'
+import {
+  LuLayoutDashboard,
+  LuListOrdered,
+  LuMenu,
+  LuMoon,
+  LuPackage,
+  LuPlus,
+  LuSun,
+  LuX,
+} from 'react-icons/lu'
+import { useToastStore } from '../shared/toast-store'
+import { useDashboardPrefsStore } from '../features/dashboard-prefs-store'
 
 function NavItem({
   to,
   label,
   icon,
+  light,
 }: {
   to: string
   label: string
   icon: React.ReactNode
+  light: boolean
 }) {
   return (
     <NavLink
@@ -19,11 +33,13 @@ function NavItem({
           'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm ring-1 transition',
           isActive
             ? 'bg-violet-500 text-white ring-violet-400'
-            : 'bg-neutral-950 text-neutral-200 ring-white/10 hover:bg-neutral-900',
+            : light
+              ? 'bg-white text-neutral-800 ring-neutral-200 hover:bg-neutral-50'
+              : 'bg-neutral-950 text-neutral-200 ring-white/10 hover:bg-neutral-900',
         ].join(' ')
       }
     >
-      <span className="text-neutral-200">{icon}</span>
+      <span className={light ? 'text-neutral-600' : 'text-neutral-200'}>{icon}</span>
       {label}
     </NavLink>
   )
@@ -31,27 +47,68 @@ function NavItem({
 
 export function RootLayout() {
   const navigate = useNavigate()
+  const toastMsg = useToastStore((s) => s.message)
+  const theme = useDashboardPrefsStore((s) => s.theme)
+  const setDashTheme = useDashboardPrefsStore((s) => s.setTheme)
+  const [mobileNav, setMobileNav] = useState(false)
+
+  const light = theme === 'light'
+
+  const shell = light ? 'min-h-dvh bg-zinc-50 text-neutral-900' : 'min-h-dvh bg-neutral-950 text-neutral-50'
+  const headerBar = light
+    ? 'border-b border-neutral-200 bg-white/95 backdrop-blur'
+    : 'border-b border-white/10 bg-neutral-950/80 backdrop-blur'
+
+  const navLinks = (
+    <>
+      <NavItem to="/" label="Обзор" icon={<LuLayoutDashboard className="h-4 w-4" />} light={light} />
+      <NavItem to="/orders" label="Заказы" icon={<LuListOrdered className="h-4 w-4" />} light={light} />
+      <NavItem to="/catalog" label="Каталог" icon={<LuPackage className="h-4 w-4" />} light={light} />
+      <NavItem to="/catalog/new" label="Добавить" icon={<LuPlus className="h-4 w-4" />} light={light} />
+    </>
+  )
+
   return (
-    <div className="min-h-dvh bg-neutral-950 text-neutral-50">
-      <header className="border-b border-white/10 bg-neutral-950/80 backdrop-blur">
+    <div className={shell}>
+      {toastMsg && (
+        <div className="fixed left-1/2 top-4 z-[80] max-w-md -translate-x-1/2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-xl ring-1 ring-emerald-400/40">
+          {toastMsg}
+        </div>
+      )}
+
+      <header className={headerBar}>
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-4">
           <Link to="/" className="flex items-center gap-3">
             <img
               src="/brand/logo.jpg"
               alt="CLOTH.AI"
-              className="h-9 w-9 rounded-xl bg-white object-contain ring-1 ring-white/10"
+              className="h-9 w-9 rounded-xl bg-white object-contain ring-1 ring-black/10 dark:ring-white/10"
               loading="eager"
             />
             <div className="text-sm font-semibold tracking-tight">Admin</div>
           </Link>
-          <nav className="flex flex-wrap items-center gap-2">
-            <NavItem to="/" label="Обзор" icon={<LuLayoutDashboard className="h-4 w-4" />} />
-            <NavItem to="/orders" label="Заказы" icon={<LuListOrdered className="h-4 w-4" />} />
-            <NavItem to="/catalog" label="Каталог" icon={<LuPackage className="h-4 w-4" />} />
-            <NavItem to="/catalog/new" label="Добавить" icon={<LuPlus className="h-4 w-4" />} />
+
+          <div className="hidden flex-wrap items-center gap-2 lg:flex">
+            {navLinks}
             <button
               type="button"
-              className="rounded-xl px-3 py-2 text-xs text-neutral-400 ring-1 ring-white/10 hover:bg-neutral-900"
+              className={
+                light
+                  ? 'rounded-xl p-2 text-neutral-600 ring-1 ring-neutral-200 hover:bg-neutral-100'
+                  : 'rounded-xl p-2 text-neutral-300 ring-1 ring-white/10 hover:bg-neutral-900'
+              }
+              aria-label={light ? 'Тёмная тема' : 'Светлая тема'}
+              onClick={() => setDashTheme(light ? 'dark' : 'light')}
+            >
+              {light ? <LuMoon className="h-4 w-4" /> : <LuSun className="h-4 w-4" />}
+            </button>
+            <button
+              type="button"
+              className={
+                light
+                  ? 'rounded-xl px-3 py-2 text-xs text-neutral-600 ring-1 ring-neutral-200 hover:bg-neutral-100'
+                  : 'rounded-xl px-3 py-2 text-xs text-neutral-400 ring-1 ring-white/10 hover:bg-neutral-900'
+              }
               onClick={() => {
                 setAdminToken(null)
                 navigate('/login', { replace: true })
@@ -59,13 +116,67 @@ export function RootLayout() {
             >
               Выход
             </button>
-          </nav>
+          </div>
+
+          <div className="flex items-center gap-2 lg:hidden">
+            <button
+              type="button"
+              className={
+                light
+                  ? 'rounded-xl p-2 text-neutral-600 ring-1 ring-neutral-200 hover:bg-neutral-100'
+                  : 'rounded-xl p-2 text-neutral-300 ring-1 ring-white/10 hover:bg-neutral-900'
+              }
+              aria-label={light ? 'Тёмная тема' : 'Светлая тема'}
+              onClick={() => setDashTheme(light ? 'dark' : 'light')}
+            >
+              {light ? <LuMoon className="h-5 w-5" /> : <LuSun className="h-5 w-5" />}
+            </button>
+            <button
+              type="button"
+              aria-label="Меню"
+              aria-expanded={mobileNav}
+              className={
+                light
+                  ? 'rounded-xl p-2 ring-1 ring-neutral-200 hover:bg-neutral-100'
+                  : 'rounded-xl p-2 ring-1 ring-white/10 hover:bg-neutral-900'
+              }
+              onClick={() => setMobileNav((v) => !v)}
+            >
+              {mobileNav ? <LuX className="h-5 w-5" /> : <LuMenu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
+
+        {mobileNav && (
+          <div
+            className={
+              light
+                ? 'border-t border-neutral-200 bg-white px-4 py-4 lg:hidden'
+                : 'border-t border-white/10 bg-neutral-950 px-4 py-4 lg:hidden'
+            }
+          >
+            <div className="flex flex-col gap-2">{navLinks}</div>
+            <button
+              type="button"
+              className={
+                light
+                  ? 'mt-3 w-full rounded-xl py-3 text-sm text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50'
+                  : 'mt-3 w-full rounded-xl py-3 text-sm text-neutral-300 ring-1 ring-white/10 hover:bg-neutral-900'
+              }
+              onClick={() => {
+                setAdminToken(null)
+                navigate('/login', { replace: true })
+              }}
+            >
+              Выход
+            </button>
+          </div>
+        )}
       </header>
+
       <main className="mx-auto w-full max-w-5xl px-4 py-6">
         <Outlet />
       </main>
     </div>
   )
 }
-

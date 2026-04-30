@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Card } from '../../shared/ui/card'
 import { Button } from '../../shared/ui/button'
-import { LuCheck, LuCloudUpload, LuImagePlus, LuSparkles } from 'react-icons/lu'
+import { LuCheck, LuCircleAlert, LuCloudUpload, LuImagePlus, LuSparkles } from 'react-icons/lu'
 import {
   createCatalogItemDraft,
   getCatalogRow,
@@ -12,6 +12,7 @@ import {
 } from '../../shared/api/api-client'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useCatalogRowQuery } from '../../shared/api/queries'
+import { useToastStore } from '../../shared/toast-store'
 
 type Step = 1 | 2 | 3
 type Category = 'tops' | 'bottoms' | 'dresses'
@@ -67,6 +68,7 @@ const FALLBACK = {
 export function CatalogWizardPage() {
   const navigate = useNavigate()
   const { itemId } = useParams()
+  const showToast = useToastStore((s) => s.show)
   const isEdit = !!itemId
   const [workingId, setWorkingId] = useState<string | null>(itemId ?? null)
   const rowId = itemId ?? workingId ?? ''
@@ -78,8 +80,20 @@ export function CatalogWizardPage() {
   const [priceTjs, setPriceTjs] = useState<number>(199)
   const [category, setCategory] = useState<Category>('tops')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [uploadBanner, setUploadBanner] = useState<
+    null | { kind: 'success' | 'error'; message: string }
+  >(null)
 
   const canContinue1 = title.trim().length > 2 && priceTjs > 0
+
+  const photoPreviewUrl = rowQuery.data?.coverUrl || rowQuery.data?.sourceImageUrl
+
+  useEffect(() => {
+    if (uploadBanner?.kind !== 'success') return
+    const t = window.setTimeout(() => setUploadBanner(null), 4500)
+    return () => window.clearTimeout(t)
+  }, [uploadBanner])
 
   const tiles = useMemo(() => {
     const row = rowQuery.data
@@ -121,6 +135,8 @@ export function CatalogWizardPage() {
           const file = e.target.files?.[0]
           e.target.value = ''
           if (!file) return
+          setUploadBanner(null)
+          setIsUploadingPhoto(true)
           try {
             let id = workingId
             if (!id) {
@@ -130,8 +146,15 @@ export function CatalogWizardPage() {
             }
             await uploadCatalogPhoto(id, file)
             await rowQuery.refetch()
+            setUploadBanner({
+              kind: 'success',
+              message: `Файл «${file.name}» загружен.`,
+            })
           } catch (err) {
-            alert(err instanceof Error ? err.message : 'Ошибка загрузки')
+            const message = err instanceof Error ? err.message : 'Ошибка загрузки'
+            setUploadBanner({ kind: 'error', message })
+          } finally {
+            setIsUploadingPhoto(false)
           }
         }}
       />
@@ -171,7 +194,10 @@ export function CatalogWizardPage() {
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-3">
               <div className="text-sm font-medium">Фото</div>
-              <div className="rounded-2xl bg-neutral-950/60 p-4 ring-1 ring-white/10">
+              <div
+                className="rounded-2xl bg-neutral-950/60 p-4 ring-1 ring-white/10"
+                aria-busy={isUploadingPhoto}
+              >
                 <div className="flex items-center gap-3">
                   <div className="grid h-11 w-11 place-items-center rounded-2xl bg-violet-500/15 ring-1 ring-violet-400/30">
                     <LuImagePlus className="h-5 w-5 text-violet-200" />
@@ -183,19 +209,63 @@ export function CatalogWizardPage() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 flex gap-2">
-                  <Button variant="secondary" type="button" onClick={() => fileRef.current?.click()}>
-                    <LuCloudUpload className="mr-2 h-4 w-4" />
-                    Выбрать файл
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    disabled={isUploadingPhoto}
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    {isUploadingPhoto ? (
+                      <>
+                        <span
+                          className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white"
+                          aria-hidden
+                        />
+                        Загрузка…
+                      </>
+                    ) : (
+                      <>
+                        <LuCloudUpload className="mr-2 h-4 w-4" />
+                        Выбрать файл
+                      </>
+                    )}
                   </Button>
+                  {isUploadingPhoto && (
+                    <span className="text-xs text-neutral-400">Отправляем файл на сервер…</span>
+                  )}
                 </div>
-                {rowQuery.data?.coverUrl && (
-                  <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-white/10">
+                {uploadBanner && (
+                  <div
+                    role="status"
+                    className={[
+                      'mt-3 flex items-start gap-2 rounded-xl px-3 py-2 text-xs ring-1',
+                      uploadBanner.kind === 'success'
+                        ? 'bg-emerald-950/40 text-emerald-100 ring-emerald-500/35'
+                        : 'bg-red-950/40 text-red-100 ring-red-500/35',
+                    ].join(' ')}
+                  >
+                    {uploadBanner.kind === 'error' && (
+                      <LuCircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                    )}
+                    {uploadBanner.kind === 'success' && (
+                      <LuCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden />
+                    )}
+                    <span>{uploadBanner.message}</span>
+                  </div>
+                )}
+                {photoPreviewUrl && (
+                  <div className="relative mt-3 overflow-hidden rounded-xl ring-1 ring-white/10">
                     <img
-                      src={rowQuery.data.coverUrl}
-                      alt="Превью"
-                      className="max-h-48 w-full object-contain"
+                      src={photoPreviewUrl}
+                      alt="Превью загруженного фото"
+                      className="max-h-48 w-full object-contain bg-neutral-950"
                     />
+                    {isUploadingPhoto && (
+                      <div className="absolute inset-0 grid place-items-center bg-neutral-950/55 backdrop-blur-[2px]">
+                        <span className="text-xs font-medium text-neutral-100">Обновляем превью…</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -255,6 +325,11 @@ export function CatalogWizardPage() {
               <div className="text-sm font-semibold">Генерация типажей</div>
               <div className="mt-1 text-xs text-neutral-300">
                 GPT-4o-mini + DALL·E 3 (три полноформатных кадра). Занимает 1–3 минуты.
+              </div>
+              <div className="mt-3 rounded-xl bg-neutral-950/40 p-3 text-xs leading-relaxed text-neutral-300 ring-1 ring-white/10 dark:bg-neutral-950/40">
+                Ниже четыре превью: <span className="text-neutral-100">исходное фото</span> и три
+                типажа (высокий / средний / плотный). Нажмите «Запустить» и дождитесь статуса
+                генерации — затем откройте шаг «Публикация».
               </div>
             </div>
             <Button
@@ -324,7 +399,19 @@ export function CatalogWizardPage() {
                 ].join(' ')}
               >
                 {!isGenerating && rowQuery.data?.status !== 'generating' && (
-                  <img src={tiles[k]} alt={k} className="h-full w-full object-cover" />
+                  <img
+                    src={tiles[k]}
+                    alt={
+                      k === 'original'
+                        ? 'Оригинал'
+                        : k === 'tall'
+                          ? 'Типаж высокий'
+                          : k === 'mid'
+                            ? 'Типаж средний'
+                            : 'Типаж плотный'
+                    }
+                    className="h-full w-full object-cover"
+                  />
                 )}
               </div>
             ))}
@@ -357,6 +444,7 @@ export function CatalogWizardPage() {
               onClick={async () => {
                 if (!workingId) return
                 await setCatalogStatus({ id: workingId, status: 'published' })
+                showToast('Товар успешно опубликован')
                 navigate('/catalog')
               }}
               disabled={!workingId}
@@ -394,11 +482,17 @@ export function CatalogWizardPage() {
                 setStep(1)
               }}
             >
-              Добавить ещё
+              Новый товар (шаг 1)
             </Button>
             <Button variant="ghost" onClick={() => setStep(2)}>
               Перегенерировать
             </Button>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-xs leading-relaxed text-neutral-700 dark:border-white/10 dark:bg-neutral-950/60 dark:text-neutral-300">
+            «Новый товар» только очищает форму и возвращает к загрузке фото — без автоматической
+            публикации текущей карточки. Чтобы текущий товар появился в витрине, нажмите «Опубликовать»
+            выше.
           </div>
 
           <div className="mt-3 text-xs text-neutral-400">
