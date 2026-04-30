@@ -1,6 +1,6 @@
 import type { CatalogListResponse, GetOrderResponse, OrderStatus } from '@cloth-ai/contracts'
 import { MOCK_ORDERS } from '../../features/orders/mock-orders'
-import type { CatalogRowDto, OrderDetailsDto, OrderSummaryDto } from './types'
+import type { CatalogRowDto, OrderDetailsDto, OrderSummaryDto, ShopProfileDto } from './types'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -164,5 +164,41 @@ export async function setCatalogStatus(input: {
   }
   catalogStore.set(input.id, next)
   return next
+}
+
+let shopProfileMock: ShopProfileDto = {
+  shopName: '',
+  aboutText: '',
+  logoUrl: undefined,
+  updatedAtIso: new Date().toISOString(),
+}
+
+export async function getShopProfile(): Promise<ShopProfileDto> {
+  await sleep(150)
+  return { ...shopProfileMock }
+}
+
+export async function updateShopProfile(input: {
+  shopName: string
+  aboutText: string
+}): Promise<ShopProfileDto> {
+  await sleep(250)
+  shopProfileMock = {
+    ...shopProfileMock,
+    shopName: input.shopName,
+    aboutText: input.aboutText.trim() ? input.aboutText : '',
+    updatedAtIso: new Date().toISOString(),
+  }
+  return { ...shopProfileMock }
+}
+
+export async function uploadShopLogo(file: File): Promise<ShopProfileDto> {
+  await sleep(400)
+  shopProfileMock = {
+    ...shopProfileMock,
+    logoUrl: URL.createObjectURL(file),
+    updatedAtIso: new Date().toISOString(),
+  }
+  return { ...shopProfileMock }
 }
 

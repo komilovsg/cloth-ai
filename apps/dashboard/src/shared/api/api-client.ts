@@ -1,7 +1,7 @@
 import type { CatalogListResponse, GetOrderResponse, OrderStatus } from '@cloth-ai/contracts'
 import * as mock from './mock-api'
 import { setAdminToken } from '../../app/auth-gate'
-import type { CatalogRowDto, OrderDetailsDto, OrderSummaryDto } from './types'
+import type { CatalogRowDto, OrderDetailsDto, OrderSummaryDto, ShopProfileDto } from './types'
 
 type ApiMode = 'mock' | 'real'
 
@@ -80,6 +80,23 @@ export async function adminLogin(password: string): Promise<void> {
     {
       method: 'POST',
       body: JSON.stringify({ password }),
+    },
+    'none',
+  )
+  setAdminToken(data.accessToken)
+}
+
+/** Email + password (super_admin / seller_admin). Prefer over legacy adminLogin. */
+export async function dashboardLogin(email: string, password: string): Promise<void> {
+  if (getApiMode() === 'mock') {
+    setAdminToken('mock-token')
+    return
+  }
+  const data = await requestJson<{ accessToken: string }>(
+    '/v1/auth/login',
+    {
+      method: 'POST',
+      body: JSON.stringify({ email: email.trim(), password }),
     },
     'none',
   )
@@ -180,4 +197,30 @@ export async function triggerAiGeneration(itemId: string): Promise<{ queued: boo
     `/v1/catalog/items/${encodeURIComponent(itemId)}/generate-ai`,
     { method: 'POST' },
   )
+}
+
+export async function getShopProfile(): Promise<ShopProfileDto> {
+  if (getApiMode() === 'mock') return mock.getShopProfile()
+  return requestJson<ShopProfileDto>('/v1/shop/profile', undefined, 'none')
+}
+
+export async function updateShopProfile(input: {
+  shopName: string
+  aboutText: string
+}): Promise<ShopProfileDto> {
+  if (getApiMode() === 'mock') return mock.updateShopProfile(input)
+  return requestJson<ShopProfileDto>('/v1/admin/shop-profile', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      shopName: input.shopName,
+      aboutText: input.aboutText,
+    }),
+  })
+}
+
+export async function uploadShopLogo(file: File): Promise<ShopProfileDto> {
+  if (getApiMode() === 'mock') return mock.uploadShopLogo(file)
+  const fd = new FormData()
+  fd.append('file', file)
+  return requestForm<ShopProfileDto>('/v1/admin/shop-profile/logo', fd)
 }

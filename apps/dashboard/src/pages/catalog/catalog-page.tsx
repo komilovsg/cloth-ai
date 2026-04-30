@@ -19,6 +19,10 @@ const CATALOG_STATUS_RU: Record<CatalogStatus, string> = {
   hidden: 'Скрыт',
 }
 
+/** Keeps column proportions; parent scrolls horizontally on narrow viewports. */
+const CATALOG_TABLE_GRID =
+  'grid grid-cols-[1.4fr_.6fr_.5fr_.6fr_.8fr] gap-0'
+
 function StatusBadge({ status }: { status: CatalogStatus }) {
   const tone =
     status === 'published'
@@ -98,54 +102,66 @@ export function CatalogPage() {
       </Card>
 
       <Card className="overflow-hidden ring-1 ring-neutral-200 dark:ring-white/10">
-        <div className="grid grid-cols-[1.4fr_.6fr_.5fr_.6fr_.8fr] gap-0 border-b border-neutral-200 bg-white px-4 py-3 text-xs font-medium text-neutral-900 dark:border-white/10 dark:bg-neutral-950/60 dark:text-neutral-400">
-          <div>Товар</div>
-          <div>Категория</div>
-          <div className="text-right">Цена</div>
-          <div className="pl-2">Статус</div>
-          <div>Обновлено</div>
-        </div>
-
-        <div className="divide-y divide-neutral-200 bg-white dark:divide-white/10 dark:bg-transparent">
-          {catalog.isLoading && (
-            <div className="px-4 py-8 text-center text-sm font-normal text-neutral-900 dark:text-neutral-300">
-              Загружаем каталог…
+        <div className="max-w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] touch-pan-x">
+          <div className="min-w-[720px]">
+            <div
+              className={`${CATALOG_TABLE_GRID} border-b border-neutral-200 bg-white px-4 py-3 text-xs font-medium text-neutral-900 dark:border-white/10 dark:bg-neutral-950/60 dark:text-neutral-400`}
+            >
+              <div className="shrink-0">Товар</div>
+              <div className="shrink-0">Категория</div>
+              <div className="shrink-0 text-right">Цена</div>
+              <div className="shrink-0 pl-2">Статус</div>
+              <div className="shrink-0">Обновлено</div>
             </div>
-          )}
-          {catalog.isError && (
-            <div className="px-4 py-8 text-center text-sm font-normal text-neutral-900 dark:text-neutral-200">
-              Не удалось загрузить
-            </div>
-          )}
 
-          {!catalog.isLoading && !catalog.isError && rows.map((r) => (
-            <Link key={r.id} to={`/catalog/${r.id}/edit`} className="block hover:bg-neutral-50 dark:hover:bg-neutral-950/40">
-              <div className="grid grid-cols-[1.4fr_.6fr_.5fr_.6fr_.8fr] items-center gap-0 px-4 py-3">
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">{r.title}</div>
-                  <div className="mt-1 text-xs font-normal text-neutral-700 dark:text-neutral-400">{r.id}</div>
+            <div className="divide-y divide-neutral-200 bg-white dark:divide-white/10 dark:bg-transparent">
+              {catalog.isLoading && (
+                <div className="px-4 py-8 text-center text-sm font-normal text-neutral-900 dark:text-neutral-300">
+                  Загружаем каталог…
                 </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-normal text-neutral-900 dark:text-neutral-200">
-                    {CATEGORY_LABEL_RU[r.category] ?? r.category}
-                  </div>
+              )}
+              {catalog.isError && (
+                <div className="px-4 py-8 text-center text-sm font-normal text-neutral-900 dark:text-neutral-200">
+                  Не удалось загрузить
                 </div>
-                <div className="text-right text-sm font-semibold">{r.priceTjs} TJS</div>
-                <div className="pl-2">
-                  <StatusBadge status={r.status} />
-                </div>
-                <div className="text-xs font-normal text-neutral-900 dark:text-neutral-300">
-                  {new Date(r.updatedAtIso).toLocaleString()}
-                </div>
-              </div>
-            </Link>
-          ))}
+              )}
 
-          {!catalog.isLoading && !catalog.isError && rows.length === 0 && (
-            <div className="px-4 py-8 text-center text-sm font-normal text-neutral-900 dark:text-neutral-300">
-              Ничего не найдено.
+              {!catalog.isLoading &&
+                !catalog.isError &&
+                rows.map((r) => (
+                  <Link
+                    key={r.id}
+                    to={`/catalog/${r.id}/edit`}
+                    className="block hover:bg-neutral-50 dark:hover:bg-neutral-950/40"
+                  >
+                    <div className={`${CATALOG_TABLE_GRID} items-center px-4 py-3`}>
+                      <div className="min-w-0 shrink-0">
+                        <div className="truncate text-sm font-medium">{r.title}</div>
+                        <div className="mt-1 text-xs font-normal text-neutral-700 dark:text-neutral-400">{r.id}</div>
+                      </div>
+                      <div className="min-w-0 shrink-0">
+                        <div className="text-sm font-normal text-neutral-900 dark:text-neutral-200">
+                          {CATEGORY_LABEL_RU[r.category] ?? r.category}
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right text-sm font-semibold">{r.priceTjs} TJS</div>
+                      <div className="shrink-0 pl-2">
+                        <StatusBadge status={r.status} />
+                      </div>
+                      <div className="shrink-0 whitespace-nowrap text-xs font-normal text-neutral-900 dark:text-neutral-300">
+                        {new Date(r.updatedAtIso).toLocaleString()}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+
+              {!catalog.isLoading && !catalog.isError && rows.length === 0 && (
+                <div className="px-4 py-8 text-center text-sm font-normal text-neutral-900 dark:text-neutral-300">
+                  Ничего не найдено.
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </Card>
     </div>

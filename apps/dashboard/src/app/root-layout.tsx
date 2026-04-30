@@ -8,11 +8,13 @@ import {
   LuMoon,
   LuPackage,
   LuPlus,
+  LuStore,
   LuSun,
   LuX,
 } from 'react-icons/lu'
 import { useToastStore } from '../shared/toast-store'
 import { useDashboardPrefsStore } from '../features/dashboard-prefs-store'
+import { useShopProfileQuery } from '../shared/api/queries'
 
 function NavItem({
   to,
@@ -61,6 +63,7 @@ export function RootLayout() {
   const theme = useDashboardPrefsStore((s) => s.theme)
   const setDashTheme = useDashboardPrefsStore((s) => s.setTheme)
   const [mobileNav, setMobileNav] = useState(false)
+  const shopProfile = useShopProfileQuery()
 
   const light = theme === 'light'
 
@@ -91,6 +94,7 @@ export function RootLayout() {
       <NavItem to="/orders" label="Заказы" icon={<LuListOrdered className="h-4 w-4" />} light={light} />
       <NavItem to="/catalog" label="Каталог" icon={<LuPackage className="h-4 w-4" />} light={light} />
       <NavItem to="/catalog/new" label="Добавить" icon={<LuPlus className="h-4 w-4" />} light={light} />
+      <NavItem to="/shop" label="Магазин" icon={<LuStore className="h-4 w-4" />} light={light} />
     </>
   )
 
@@ -106,8 +110,8 @@ export function RootLayout() {
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-4">
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="/brand/logo.jpg"
-              alt="CLOTH.AI"
+              src={shopProfile.data?.logoUrl || '/brand/logo.jpg'}
+              alt={shopProfile.data?.shopName?.trim() || 'CLOTH.AI'}
               className="h-9 w-9 rounded-xl bg-white object-contain ring-1 ring-black/10 dark:ring-white/10"
               loading="eager"
             />

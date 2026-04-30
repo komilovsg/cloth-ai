@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getCatalogRow, getOrderDetails, listCatalogRows, listOrderSummaries, listOrders, setOrderStatus, updateCatalogRow } from './api-client'
+import { getCatalogRow, getOrderDetails, getShopProfile, listCatalogRows, listOrderSummaries, listOrders, setOrderStatus, updateCatalogRow, updateShopProfile, uploadShopLogo } from './api-client'
 
 export const queryKeys = {
   orders: () => ['orders'] as const,
@@ -7,6 +7,7 @@ export const queryKeys = {
   orderDetails: (orderId: string) => ['order', orderId] as const,
   catalogRows: () => ['catalogRows'] as const,
   catalogRow: (id: string) => ['catalogRow', id] as const,
+  shopProfile: () => ['shopProfile'] as const,
 }
 
 export function useOrdersQuery() {
@@ -73,6 +74,34 @@ export function useUpdateCatalogRowMutation() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.catalogRows() })
       qc.invalidateQueries({ queryKey: queryKeys.catalogRow(variables.id) })
+    },
+  })
+}
+
+export function useShopProfileQuery() {
+  return useQuery({
+    queryKey: queryKeys.shopProfile(),
+    queryFn: getShopProfile,
+    staleTime: 60_000,
+  })
+}
+
+export function useUpdateShopProfileMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: updateShopProfile,
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.shopProfile(), data)
+    },
+  })
+}
+
+export function useUploadShopLogoMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: uploadShopLogo,
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.shopProfile(), data)
     },
   })
 }

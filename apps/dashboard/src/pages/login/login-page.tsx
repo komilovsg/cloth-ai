@@ -1,10 +1,16 @@
 import { useLayoutEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../shared/ui/button'
-import { adminLogin } from '../../shared/api/api-client'
+import { dashboardLogin } from '../../shared/api/api-client'
+
+function isMockApiMode(): boolean {
+  const raw = import.meta.env.VITE_API_MODE as string | undefined
+  return raw?.toLowerCase() !== 'real'
+}
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -25,7 +31,11 @@ export function LoginPage() {
       <div className="w-full max-w-sm space-y-4 rounded-2xl bg-neutral-900/80 p-6 ring-1 ring-white/10">
         <div>
           <h1 className="text-lg font-semibold">CLOTH.AI Admin</h1>
-          <p className="mt-1 text-xs text-neutral-400">Введите пароль API (ADMIN_PASSWORD).</p>
+          <p className="mt-1 text-xs text-neutral-400">
+            Вход по email и паролю. Первый супер-админ задаётся на backend через{' '}
+            <span className="font-mono text-[11px]">SUPER_ADMIN_BOOTSTRAP_EMAIL</span> /{' '}
+            <span className="font-mono text-[11px]">PASSWORD</span>. Режим mock: любые значения.
+          </p>
         </div>
         <form
           className="space-y-3"
@@ -34,7 +44,7 @@ export function LoginPage() {
             setError(null)
             setPending(true)
             try {
-              await adminLogin(password)
+              await dashboardLogin(email, password)
               navigate('/', { replace: true })
             } catch (err) {
               setError(err instanceof Error ? err.message : 'Ошибка входа')
@@ -43,6 +53,16 @@ export function LoginPage() {
             }
           }}
         >
+          <div className="grid gap-2">
+            <label className="text-xs text-neutral-400">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="rounded-xl bg-neutral-900 px-3 py-2 text-sm ring-1 ring-white/10"
+              autoComplete="email"
+            />
+          </div>
           <div className="grid gap-2">
             <label className="text-xs text-neutral-400">Пароль</label>
             <input
@@ -54,7 +74,7 @@ export function LoginPage() {
             />
           </div>
           {error && <div className="text-xs text-red-400">{error}</div>}
-          <Button type="submit" disabled={pending || !password}>
+          <Button type="submit" disabled={pending || !password || (!isMockApiMode() && !email.trim())}>
             {pending ? 'Вход…' : 'Войти'}
           </Button>
         </form>

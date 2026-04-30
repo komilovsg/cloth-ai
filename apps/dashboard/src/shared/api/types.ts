@@ -46,3 +46,10 @@ export interface CatalogRowDto {
   generationError?: string
 }
 
+export interface ShopProfileDto {
+  shopName: string
+  aboutText?: string | null
+  logoUrl?: string | null
+  updatedAtIso: string
+}
+
