@@ -15,7 +15,7 @@ const CATALOG_STATUS_RU: Record<CatalogStatus, string> = {
   draft: 'Черновик',
   generating: 'Генерация',
   generated: 'Готово к публикации',
-  published: 'В витрине',
+  published: 'Опубликовано',
   hidden: 'Скрыт',
 }
 
@@ -27,12 +27,13 @@ function StatusBadge({ status }: { status: CatalogStatus }) {
         ? 'bg-sky-500/15 text-sky-200 ring-sky-400/30'
         : status === 'draft'
           ? 'bg-neutral-100 text-neutral-800 ring-neutral-200 dark:bg-neutral-950/60 dark:text-neutral-200 dark:ring-white/10'
-          : 'bg-amber-500/15 text-amber-200 ring-amber-400/30'
+          : status === 'hidden'
+            ? 'bg-neutral-600/20 text-neutral-200 ring-neutral-500/30'
+            : 'bg-amber-500/15 text-amber-200 ring-amber-400/30'
 
   return (
-    <span className={['inline-flex flex-col gap-0.5 rounded-full px-2 py-1 text-xs ring-1', tone].join(' ')}>
-      <span>{CATALOG_STATUS_RU[status] ?? status}</span>
-      <span className="font-mono text-[10px] opacity-70">{status}</span>
+    <span className={['inline-flex items-center rounded-full px-2 py-1 text-xs ring-1', tone].join(' ')}>
+      {CATALOG_STATUS_RU[status] ?? status}
     </span>
   )
 }
@@ -86,11 +87,11 @@ export function CatalogPage() {
               className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-950"
             >
               <option value="all">Все</option>
-            <option value="draft">Черновик (draft)</option>
-            <option value="generating">Генерация (generating)</option>
-            <option value="generated">Готово (generated)</option>
-            <option value="published">В витрине (published)</option>
-            <option value="hidden">Скрыт (hidden)</option>
+            {(Object.keys(CATALOG_STATUS_RU) as CatalogStatus[]).map((key) => (
+              <option key={key} value={key}>
+                {CATALOG_STATUS_RU[key]}
+              </option>
+            ))}
             </select>
           </div>
         </div>
