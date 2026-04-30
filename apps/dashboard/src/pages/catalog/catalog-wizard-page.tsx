@@ -393,12 +393,12 @@ export function CatalogWizardPage() {
             </div>
           )}
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
             {(['original', 'tall', 'mid', 'curvy'] as const).map((k) => (
               <div
                 key={k}
-                  className={[
-                  'aspect-[3/4] w-full overflow-hidden rounded-2xl ring-1 ring-neutral-200 dark:ring-white/10',
+                className={[
+                  'h-28 w-full overflow-hidden rounded-xl ring-1 ring-neutral-200 sm:h-32 md:h-36 dark:ring-white/10',
                   isGenerating || rowQuery.data?.status === 'generating'
                     ? 'animate-pulse bg-neutral-200 dark:bg-neutral-900'
                     : 'bg-neutral-100 dark:bg-neutral-950/60',
@@ -459,7 +459,7 @@ export function CatalogWizardPage() {
             </Button>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
             {(
               [
                 ['Оригинал', tiles.original],
@@ -468,11 +468,16 @@ export function CatalogWizardPage() {
                 ['Плотный', tiles.curvy],
               ] as const
             ).map(([label, url]) => (
-              <div key={label} className="overflow-hidden rounded-2xl ring-1 ring-neutral-200 dark:ring-white/10">
-                <div className="aspect-[3/4] w-full bg-neutral-100 dark:bg-neutral-950">
+              <div
+                key={label}
+                className="flex min-w-0 flex-col overflow-hidden rounded-xl ring-1 ring-neutral-200 dark:ring-white/10"
+              >
+                <div className="h-28 w-full shrink-0 overflow-hidden bg-neutral-100 sm:h-32 md:h-36 dark:bg-neutral-950">
                   <img src={url} alt={label} className="h-full w-full object-cover" />
                 </div>
-                <div className="p-2 text-xs font-normal text-neutral-900 dark:text-neutral-300">{label}</div>
+                <div className="truncate px-1 py-1 text-center text-[10px] font-normal text-neutral-900 sm:text-xs dark:text-neutral-300">
+                  {label}
+                </div>
               </div>
             ))}
           </div>
