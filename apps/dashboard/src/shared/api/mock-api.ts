@@ -242,6 +242,15 @@ export async function passwordChangeConfirm(_id: string, _code: string): Promise
   await sleep(200)
 }
 
+export async function passwordRecoveryStart(): Promise<string> {
+  await sleep(200)
+  return '00000000-0000-4000-8000-00000000recovery'
+}
+
+export async function passwordRecoveryConfirm(_id: string, _code: string, _newPassword: string): Promise<void> {
+  await sleep(200)
+}
+
 export async function listSellers(page: number, limit: number): Promise<SellerListDto> {
   await sleep(150)
   const start = (page - 1) * limit

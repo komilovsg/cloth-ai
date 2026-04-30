@@ -169,6 +169,28 @@ export async function passwordChangeConfirm(changeRequestId: string, code: strin
   })
 }
 
+/** Залогиненный пользователь забыл текущий пароль: код на почту, затем новый пароль в ЛК. */
+export async function passwordRecoveryStart(): Promise<string> {
+  if (getApiMode() === 'mock') return mock.passwordRecoveryStart()
+  const data = await requestJson<{ changeRequestId: string }>('/v1/auth/password/recovery/start', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+  return data.changeRequestId
+}
+
+export async function passwordRecoveryConfirm(
+  changeRequestId: string,
+  code: string,
+  newPassword: string,
+): Promise<void> {
+  if (getApiMode() === 'mock') return mock.passwordRecoveryConfirm(changeRequestId, code, newPassword)
+  await requestJson<{ ok: boolean }>('/v1/auth/password/recovery/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ changeRequestId, code, newPassword }),
+  })
+}
+
 export async function listSellers(page = 1, limit = 50): Promise<SellerListDto> {
   if (getApiMode() === 'mock') return mock.listSellers(page, limit)
   const qs = new URLSearchParams({ page: String(page), limit: String(limit) })

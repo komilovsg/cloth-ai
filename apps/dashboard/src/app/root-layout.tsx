@@ -48,11 +48,11 @@ function userInitials(email: string | null | undefined): string {
   return local.slice(0, 2).toUpperCase() || '?'
 }
 
-function displayAccountLabel(email: string | null | undefined): string {
-  const e = (email ?? '').trim()
-  if (!e) return 'Аккаунт'
-  const local = e.split('@')[0] ?? e
-  return local.length > 28 ? `${local.slice(0, 26)}…` : local
+function dashboardRoleTitle(role: string | undefined, impersonation: boolean | undefined): string {
+  if (role === 'super_admin' && !impersonation) return 'Супер-администратор'
+  if (role === 'seller_admin' && impersonation) return 'Администратор магазина (поддержка)'
+  if (role === 'seller_admin') return 'Администратор магазина'
+  return role ?? 'Аккаунт'
 }
 
 function SidebarLink({
@@ -137,10 +137,10 @@ export function RootLayout() {
   const headerBar = light ? 'border-neutral-200 bg-white/90' : 'border-white/10 bg-neutral-950/90'
 
   const initials = userInitials(authMe.data?.email ?? undefined)
-  const accountLabel = displayAccountLabel(authMe.data?.email ?? undefined)
+  const roleTitle = dashboardRoleTitle(authMe.data?.role, authMe.data?.impersonation)
 
-  const sidebarNav = (
-    <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
+  const sidebarLinks = (
+    <>
       <SidebarLink
         to="/"
         label="Обзор"
@@ -183,7 +183,7 @@ export function RootLayout() {
           onNavigate={closeMobile}
         />
       )}
-    </nav>
+    </>
   )
 
   return (
@@ -260,7 +260,94 @@ export function RootLayout() {
           </button>
         </div>
 
-        {sidebarNav}
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">{sidebarLinks}</nav>
+
+        <div
+          className={[
+            'shrink-0 space-y-2 border-t p-2',
+            light ? 'border-neutral-200' : 'border-white/10',
+          ].join(' ')}
+        >
+          <button
+            type="button"
+            title={light ? 'Светлая тема — переключить на тёмную' : 'Тёмная тема — переключить на светлую'}
+            onClick={() => setDashTheme(light ? 'dark' : 'light')}
+            className={[
+              'flex w-full items-center gap-2 rounded-xl py-2 text-left text-xs font-medium transition',
+              sidebarCollapsed ? 'justify-center px-2' : 'px-2',
+              light
+                ? 'text-neutral-800 hover:bg-neutral-100'
+                : 'text-neutral-200 hover:bg-white/5',
+            ].join(' ')}
+          >
+            {light ? (
+              <LuSun className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />
+            ) : (
+              <LuMoon className="h-4 w-4 shrink-0 text-violet-300" aria-hidden />
+            )}
+            {!sidebarCollapsed && <span>{light ? 'Светлая тема' : 'Тёмная тема'}</span>}
+          </button>
+
+          <div className="flex items-stretch gap-2">
+            <Link
+              to="/profile"
+              title={
+                sidebarCollapsed
+                  ? `${roleTitle}. Личный кабинет`
+                  : undefined
+              }
+              onClick={() => closeMobile()}
+              className={[
+                'flex min-w-0 flex-1 items-center gap-2 rounded-xl py-1.5 transition',
+                sidebarCollapsed ? 'justify-center px-1' : 'px-2',
+                light ? 'hover:bg-neutral-100' : 'hover:bg-white/5',
+              ].join(' ')}
+            >
+              <span
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-xs font-bold text-white shadow-sm"
+                aria-hidden
+              >
+                {initials}
+              </span>
+              {!sidebarCollapsed && (
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-semibold leading-tight text-neutral-900 dark:text-neutral-50">
+                    {roleTitle}
+                  </span>
+                  <span className="mt-0.5 block truncate text-[11px] font-normal text-neutral-500 dark:text-neutral-400">
+                    Личный кабинет
+                  </span>
+                </span>
+              )}
+            </Link>
+
+            <div
+              className={[
+                'w-px shrink-0 self-stretch min-h-[2.25rem]',
+                light ? 'bg-neutral-200' : 'bg-white/15',
+              ].join(' ')}
+              aria-hidden
+            />
+
+            <button
+              type="button"
+              aria-label="Выйти"
+              title="Выйти"
+              onClick={() => {
+                setAdminToken(null)
+                navigate('/login', { replace: true })
+              }}
+              className={[
+                'inline-flex shrink-0 items-center justify-center rounded-xl px-2 py-2 transition',
+                light
+                  ? 'text-neutral-600 hover:bg-neutral-100'
+                  : 'text-neutral-300 hover:bg-white/5',
+              ].join(' ')}
+            >
+              <LuLogOut className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
       </aside>
 
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
@@ -299,73 +386,17 @@ export function RootLayout() {
               <LuMenu className="h-5 w-5" />
             </button>
 
-            <Link to="/" className="flex min-w-0 items-center gap-2">
+            <div className="flex-1 lg:hidden" />
+
+            <Link to="/" className="ml-auto flex shrink-0 items-center gap-2 lg:flex-1 lg:justify-end">
               <img
                 src="/brand/logo.jpg"
                 alt="CLOTH.AI"
                 className="h-9 w-9 shrink-0 rounded-xl bg-white object-contain ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/10"
                 loading="eager"
               />
-              <span className="hidden truncate text-sm font-semibold tracking-tight sm:inline">
-                CLOTH.AI Admin
-              </span>
+              <span className="truncate text-sm font-semibold tracking-tight">CLOTH.AI Admin</span>
             </Link>
-
-            <div className="flex flex-1 justify-end items-center gap-2">
-              <button
-                type="button"
-                className={
-                  light
-                    ? 'rounded-xl p-2 text-neutral-600 ring-1 ring-neutral-200 hover:bg-neutral-100'
-                    : 'rounded-xl p-2 text-neutral-300 ring-1 ring-white/10 hover:bg-neutral-900'
-                }
-                aria-label={light ? 'Тёмная тема' : 'Светлая тема'}
-                onClick={() => setDashTheme(light ? 'dark' : 'light')}
-              >
-                {light ? <LuMoon className="h-4 w-4" /> : <LuSun className="h-4 w-4" />}
-              </button>
-
-              <Link
-                to="/profile"
-                className={
-                  light
-                    ? 'flex max-w-[min(100%,14rem)] items-center gap-2 rounded-xl px-2 py-1.5 ring-1 ring-neutral-200 hover:bg-neutral-50'
-                    : 'flex max-w-[min(100%,14rem)] items-center gap-2 rounded-xl px-2 py-1.5 ring-1 ring-white/10 hover:bg-neutral-900'
-                }
-              >
-                <span
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-xs font-bold text-white shadow-sm"
-                  aria-hidden
-                >
-                  {initials}
-                </span>
-                <span className="hidden min-w-0 flex-col text-left text-xs sm:flex">
-                  <span className="truncate font-semibold leading-tight text-neutral-900 dark:text-neutral-50">
-                    {accountLabel}
-                  </span>
-                  <span className="truncate text-[11px] font-normal text-neutral-500 dark:text-neutral-400">
-                    Личный кабинет
-                  </span>
-                </span>
-              </Link>
-
-              <button
-                type="button"
-                aria-label="Выйти"
-                title="Выйти"
-                className={
-                  light
-                    ? 'rounded-xl p-2 text-neutral-600 ring-1 ring-neutral-200 hover:bg-neutral-100'
-                    : 'rounded-xl p-2 text-neutral-300 ring-1 ring-white/10 hover:bg-neutral-900'
-                }
-                onClick={() => {
-                  setAdminToken(null)
-                  navigate('/login', { replace: true })
-                }}
-              >
-                <LuLogOut className="h-4 w-4" />
-              </button>
-            </div>
           </div>
         </header>
 

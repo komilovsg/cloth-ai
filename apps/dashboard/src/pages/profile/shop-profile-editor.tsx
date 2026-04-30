@@ -1,34 +1,132 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { Card } from '../../shared/ui/card'
 import { Button } from '../../shared/ui/button'
 import {
+  useAuthMeQuery,
   useShopProfileQuery,
   useUpdateShopProfileMutation,
   useUploadShopLogoMutation,
 } from '../../shared/api/queries'
-import { passwordChangeConfirm, passwordChangeStart } from '../../shared/api/api-client'
-import { LuImagePlus } from 'react-icons/lu'
+import {
+  passwordChangeConfirm,
+  passwordChangeStart,
+  passwordRecoveryConfirm,
+  passwordRecoveryStart,
+} from '../../shared/api/api-client'
+import { LuEye, LuEyeOff, LuImagePlus } from 'react-icons/lu'
+
+const MIN_PASSWORD_LEN = 8
+
+function PasswordRevealInput({
+  placeholder,
+  value,
+  onChange,
+  visible,
+  onToggleVisible,
+  autoComplete,
+  error,
+}: {
+  placeholder: string
+  value: string
+  onChange: (v: string) => void
+  visible: boolean
+  onToggleVisible: () => void
+  autoComplete?: string
+  error?: string
+}) {
+  return (
+    <div className="grid gap-1">
+      <div className="relative">
+        <input
+          type={visible ? 'text' : 'password'}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
+          className={[
+            'w-full rounded-xl border bg-white px-3 py-2 pr-11 text-sm text-neutral-900 placeholder:text-neutral-500 dark:bg-neutral-950 dark:text-neutral-50 dark:placeholder:text-neutral-500',
+            error
+              ? 'border-red-400 ring-2 ring-red-400/25 dark:border-red-500 dark:ring-red-500/25'
+              : 'border-neutral-200 ring-1 ring-neutral-200 dark:border-white/10 dark:ring-white/10',
+          ].join(' ')}
+        />
+        <button
+          type="button"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-2 text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-white/10"
+          aria-label={visible ? 'Скрыть пароль' : 'Показать пароль'}
+          onClick={onToggleVisible}
+        >
+          {visible ? <LuEyeOff className="h-4 w-4" aria-hidden /> : <LuEye className="h-4 w-4" aria-hidden />}
+        </button>
+      </div>
+      {error ? <p className="text-xs text-red-600 dark:text-red-400">{error}</p> : null}
+    </div>
+  )
+}
 
 export function ChangePasswordCard() {
+  const authMe = useAuthMeQuery()
+  const email = authMe.data?.email?.trim() ?? ''
+
+  const [flow, setFlow] = useState<'change' | 'recover'>('change')
   const [step, setStep] = useState<'form' | 'code'>('form')
+  const [recoverStep, setRecoverStep] = useState<'intro' | 'set'>('intro')
+
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [newPassword2, setNewPassword2] = useState('')
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew1, setShowNew1] = useState(false)
+  const [showNew2, setShowNew2] = useState(false)
+
+  const [recoverNew1, setRecoverNew1] = useState('')
+  const [recoverNew2, setRecoverNew2] = useState('')
+  const [showRv1, setShowRv1] = useState(false)
+  const [showRv2, setShowRv2] = useState(false)
+
   const [changeRequestId, setChangeRequestId] = useState('')
   const [code, setCode] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<{
+    current?: string
+    newPwd?: string
+    newPwd2?: string
+    code?: string
+    rv1?: string
+    rv2?: string
+  }>({})
+
+  function resetRecoverFields() {
+    setRecoverStep('intro')
+    setRecoverNew1('')
+    setRecoverNew2('')
+    setChangeRequestId('')
+    setCode('')
+    setShowRv1(false)
+    setShowRv2(false)
+  }
+
+  function resetChangeFields() {
+    setStep('form')
+    setCurrentPassword('')
+    setNewPassword('')
+    setNewPassword2('')
+    setCode('')
+    setChangeRequestId('')
+    setShowCurrent(false)
+    setShowNew1(false)
+    setShowNew2(false)
+  }
 
   const startMut = useMutation({
-    mutationFn: async () => {
-      if (newPassword.length < 8) throw new Error('Минимум 8 символов')
-      if (newPassword !== newPassword2) throw new Error('Пароли не совпадают')
-      return passwordChangeStart(currentPassword, newPassword)
-    },
+    mutationFn: async () => passwordChangeStart(currentPassword, newPassword),
     onSuccess: (id) => {
       setChangeRequestId(id)
       setStep('code')
       setLocalError(null)
+      setFieldErrors({})
     },
     onError: (e: Error) => setLocalError(e.message),
   })
@@ -36,83 +134,292 @@ export function ChangePasswordCard() {
   const confirmMut = useMutation({
     mutationFn: () => passwordChangeConfirm(changeRequestId, code.replace(/\s/g, '')),
     onSuccess: () => {
-      setStep('form')
-      setCurrentPassword('')
-      setNewPassword('')
-      setNewPassword2('')
-      setCode('')
-      setChangeRequestId('')
+      resetChangeFields()
       setLocalError(null)
+      setFieldErrors({})
     },
     onError: (e: Error) => setLocalError(e.message),
   })
+
+  const recoveryStartMut = useMutation({
+    mutationFn: () => passwordRecoveryStart(),
+    onSuccess: (id) => {
+      setChangeRequestId(id)
+      setRecoverStep('set')
+      setLocalError(null)
+      setFieldErrors({})
+    },
+    onError: (e: Error) => setLocalError(e.message),
+  })
+
+  const recoveryConfirmMut = useMutation({
+    mutationFn: () =>
+      passwordRecoveryConfirm(changeRequestId, code.replace(/\s/g, ''), recoverNew1),
+    onSuccess: () => {
+      setFlow('change')
+      resetChangeFields()
+      resetRecoverFields()
+      setLocalError(null)
+      setFieldErrors({})
+    },
+    onError: (e: Error) => setLocalError(e.message),
+  })
+
+  function validateChangeForm(): boolean {
+    const errs: typeof fieldErrors = {}
+    if (!currentPassword) errs.current = 'Введите текущий пароль'
+    if (newPassword.length < MIN_PASSWORD_LEN) {
+      errs.newPwd = `Минимум ${MIN_PASSWORD_LEN} символов`
+    }
+    if (newPassword !== newPassword2) errs.newPwd2 = 'Пароли должны совпадать'
+    setFieldErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  function validateRecoverSet(): boolean {
+    const errs: typeof fieldErrors = {}
+    const c = code.replace(/\s/g, '')
+    if (c.length < 6) errs.code = 'Введите код из письма (обычно 6 цифр)'
+    if (recoverNew1.length < MIN_PASSWORD_LEN) errs.rv1 = `Минимум ${MIN_PASSWORD_LEN} символов`
+    if (recoverNew1 !== recoverNew2) errs.rv2 = 'Пароли должны совпадать'
+    setFieldErrors(errs)
+    return Object.keys(errs).length === 0
+  }
 
   return (
     <Card className="p-5">
       <div className="text-sm font-semibold">Смена пароля</div>
       <p className="mt-1 text-xs font-normal text-neutral-700 dark:text-neutral-400">
-        После проверки текущего пароля на почту придёт код подтверждения (если SMTP настроен на сервере).
+        Знаете текущий пароль — введите его и новый пароль: на почту уйдёт код подтверждения (если настроена SMTP).
+        Если текущий пароль не помните — используйте вариант ниже с кодом без старого пароля или страницу «Забыли пароль»
+        без входа в аккаунт.
       </p>
 
-      {step === 'form' ? (
+      {flow === 'change' ? (
+        <>
+          {step === 'form' ? (
+            <div className="mt-4 grid max-w-md gap-3">
+              <PasswordRevealInput
+                placeholder="Текущий пароль"
+                value={currentPassword}
+                onChange={(v) => {
+                  setCurrentPassword(v)
+                  setFieldErrors((p) => ({ ...p, current: undefined }))
+                }}
+                visible={showCurrent}
+                onToggleVisible={() => setShowCurrent((s) => !s)}
+                autoComplete="current-password"
+                error={fieldErrors.current}
+              />
+              <PasswordRevealInput
+                placeholder="Новый пароль"
+                value={newPassword}
+                onChange={(v) => {
+                  setNewPassword(v)
+                  setFieldErrors((p) => ({ ...p, newPwd: undefined }))
+                }}
+                visible={showNew1}
+                onToggleVisible={() => setShowNew1((s) => !s)}
+                autoComplete="new-password"
+                error={fieldErrors.newPwd}
+              />
+              <PasswordRevealInput
+                placeholder="Повтор нового пароля"
+                value={newPassword2}
+                onChange={(v) => {
+                  setNewPassword2(v)
+                  setFieldErrors((p) => ({ ...p, newPwd2: undefined }))
+                }}
+                visible={showNew2}
+                onToggleVisible={() => setShowNew2((s) => !s)}
+                autoComplete="new-password"
+                error={fieldErrors.newPwd2}
+              />
+              {localError ? <div className="text-xs text-red-600 dark:text-red-400">{localError}</div> : null}
+              <Button
+                type="button"
+                disabled={startMut.isPending || !currentPassword || !newPassword || !newPassword2}
+                onClick={() => {
+                  setLocalError(null)
+                  if (!validateChangeForm()) return
+                  startMut.mutate()
+                }}
+              >
+                {startMut.isPending ? 'Отправка кода…' : 'Отправить код на почту'}
+              </Button>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-normal">
+                <button
+                  type="button"
+                  className="text-violet-600 underline decoration-violet-600/40 underline-offset-2 hover:opacity-90 dark:text-violet-400 dark:decoration-violet-400/40"
+                  onClick={() => {
+                    setFlow('recover')
+                    resetRecoverFields()
+                    setLocalError(null)
+                    setFieldErrors({})
+                  }}
+                >
+                  Не помню текущий пароль
+                </button>
+                <span className="text-neutral-400 dark:text-neutral-500">·</span>
+                <Link
+                  to="/forgot-password"
+                  className="text-violet-600 underline decoration-violet-600/40 underline-offset-2 hover:opacity-90 dark:text-violet-400 dark:decoration-violet-400/40"
+                >
+                  Забыли пароль? (выйти и сбросить по ссылке)
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4 grid max-w-md gap-3">
+              <div className="grid gap-1">
+                <input
+                  inputMode="numeric"
+                  placeholder="Код из письма"
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value)
+                    setFieldErrors((p) => ({ ...p, code: undefined }))
+                  }}
+                  autoComplete="one-time-code"
+                  className={[
+                    'rounded-xl border bg-white px-3 py-2 text-sm tracking-widest dark:bg-neutral-950 dark:text-neutral-50',
+                    fieldErrors.code
+                      ? 'border-red-400 ring-2 ring-red-400/25 dark:border-red-500'
+                      : 'border-neutral-200 ring-1 ring-neutral-200 dark:border-white/10 dark:ring-white/10',
+                  ].join(' ')}
+                />
+                {fieldErrors.code ? (
+                  <p className="text-xs text-red-600 dark:text-red-400">{fieldErrors.code}</p>
+                ) : null}
+              </div>
+              {localError ? <div className="text-xs text-red-600 dark:text-red-400">{localError}</div> : null}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  disabled={confirmMut.isPending || code.trim().length < 4}
+                  onClick={() => {
+                    setLocalError(null)
+                    confirmMut.mutate()
+                  }}
+                >
+                  {confirmMut.isPending ? 'Сохранение…' : 'Подтвердить'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() => {
+                    setStep('form')
+                    setLocalError(null)
+                    setFieldErrors({})
+                  }}
+                >
+                  Назад
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      ) : recoverStep === 'intro' ? (
         <div className="mt-4 grid max-w-md gap-3">
-          <input
-            type="password"
-            placeholder="Текущий пароль"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            autoComplete="current-password"
-            className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
-          />
-          <input
-            type="password"
-            placeholder="Новый пароль"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            autoComplete="new-password"
-            className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
-          />
-          <input
-            type="password"
-            placeholder="Повтор нового пароля"
-            value={newPassword2}
-            onChange={(e) => setNewPassword2(e.target.value)}
-            autoComplete="new-password"
-            className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
-          />
-          {localError && <div className="text-xs text-red-600 dark:text-red-400">{localError}</div>}
-          <Button
-            type="button"
-            disabled={startMut.isPending || !currentPassword || !newPassword || !newPassword2}
-            onClick={() => startMut.mutate()}
-          >
-            {startMut.isPending ? 'Отправка кода…' : 'Отправить код на почту'}
+          <p className="text-xs font-normal text-neutral-700 dark:text-neutral-400">
+            Отправим код на{' '}
+            <span className="font-medium text-neutral-900 dark:text-neutral-200">{email || 'ваш email'}</span>.
+            Затем введите код и новый пароль дважды. Действует только для аккаунта, в который вы уже вошли.
+          </p>
+          {localError ? <div className="text-xs text-red-600 dark:text-red-400">{localError}</div> : null}
+          <Button type="button" disabled={recoveryStartMut.isPending || !email} onClick={() => recoveryStartMut.mutate()}>
+            {recoveryStartMut.isPending ? 'Отправка…' : 'Отправить код'}
           </Button>
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={() => {
+              setFlow('change')
+              resetRecoverFields()
+              setLocalError(null)
+              setFieldErrors({})
+            }}
+          >
+            У меня есть текущий пароль
+          </Button>
+          <Link
+            to="/forgot-password"
+            className="text-xs text-violet-600 underline decoration-violet-600/40 underline-offset-2 dark:text-violet-400"
+          >
+            Нет доступа к почте этого аккаунта — сброс через «Забыли пароль»
+          </Link>
         </div>
       ) : (
         <div className="mt-4 grid max-w-md gap-3">
-          <input
-            inputMode="numeric"
-            placeholder="Код из письма"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm tracking-widest dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
+          <div className="grid gap-1">
+            <input
+              inputMode="numeric"
+              placeholder="Код из письма"
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value)
+                setFieldErrors((p) => ({ ...p, code: undefined }))
+              }}
+              autoComplete="one-time-code"
+              className={[
+                'rounded-xl border bg-white px-3 py-2 text-sm tracking-widest dark:bg-neutral-950 dark:text-neutral-50',
+                fieldErrors.code
+                  ? 'border-red-400 ring-2 ring-red-400/25 dark:border-red-500'
+                  : 'border-neutral-200 ring-1 ring-neutral-200 dark:border-white/10 dark:ring-white/10',
+              ].join(' ')}
+            />
+            {fieldErrors.code ? (
+              <p className="text-xs text-red-600 dark:text-red-400">{fieldErrors.code}</p>
+            ) : null}
+          </div>
+          <PasswordRevealInput
+            placeholder="Новый пароль"
+            value={recoverNew1}
+            onChange={(v) => {
+              setRecoverNew1(v)
+              setFieldErrors((p) => ({ ...p, rv1: undefined }))
+            }}
+            visible={showRv1}
+            onToggleVisible={() => setShowRv1((s) => !s)}
+            autoComplete="new-password"
+            error={fieldErrors.rv1}
           />
-          {localError && <div className="text-xs text-red-600 dark:text-red-400">{localError}</div>}
+          <PasswordRevealInput
+            placeholder="Повтор нового пароля"
+            value={recoverNew2}
+            onChange={(v) => {
+              setRecoverNew2(v)
+              setFieldErrors((p) => ({ ...p, rv2: undefined }))
+            }}
+            visible={showRv2}
+            onToggleVisible={() => setShowRv2((s) => !s)}
+            autoComplete="new-password"
+            error={fieldErrors.rv2}
+          />
+          {localError ? <div className="text-xs text-red-600 dark:text-red-400">{localError}</div> : null}
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              disabled={confirmMut.isPending || code.trim().length < 4}
-              onClick={() => confirmMut.mutate()}
+              disabled={recoveryConfirmMut.isPending}
+              onClick={() => {
+                setLocalError(null)
+                if (!validateRecoverSet()) return
+                recoveryConfirmMut.mutate()
+              }}
             >
-              {confirmMut.isPending ? 'Сохранение…' : 'Подтвердить'}
+              {recoveryConfirmMut.isPending ? 'Сохранение…' : 'Сохранить новый пароль'}
             </Button>
             <Button
               variant="secondary"
               type="button"
               onClick={() => {
-                setStep('form')
+                setRecoverStep('intro')
+                setCode('')
+                setRecoverNew1('')
+                setRecoverNew2('')
+                setChangeRequestId('')
                 setLocalError(null)
+                setFieldErrors({})
               }}
             >
               Назад
