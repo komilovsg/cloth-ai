@@ -264,7 +264,8 @@ export function RootLayout() {
 
         <div
           className={[
-            'shrink-0 space-y-2 border-t p-2',
+            'shrink-0 border-t p-2',
+            sidebarCollapsed ? 'flex flex-col items-center gap-2' : 'space-y-2',
             light ? 'border-neutral-200' : 'border-white/10',
           ].join(' ')}
         >
@@ -273,8 +274,8 @@ export function RootLayout() {
             title={light ? 'Светлая тема — переключить на тёмную' : 'Тёмная тема — переключить на светлую'}
             onClick={() => setDashTheme(light ? 'dark' : 'light')}
             className={[
-              'flex w-full items-center gap-2 rounded-xl py-2 text-left text-xs font-medium transition',
-              sidebarCollapsed ? 'justify-center px-2' : 'px-2',
+              'flex items-center gap-2 rounded-xl py-2 text-xs font-medium transition',
+              sidebarCollapsed ? 'w-full justify-center px-2' : 'w-full px-2 text-left',
               light
                 ? 'text-neutral-800 hover:bg-neutral-100'
                 : 'text-neutral-200 hover:bg-white/5',
@@ -288,18 +289,24 @@ export function RootLayout() {
             {!sidebarCollapsed && <span>{light ? 'Светлая тема' : 'Тёмная тема'}</span>}
           </button>
 
-          <div className="flex items-stretch gap-2">
+          <div
+            className={
+              sidebarCollapsed
+                ? 'flex w-full flex-col items-center gap-2'
+                : 'flex items-stretch gap-2'
+            }
+          >
             <Link
               to="/profile"
               title={
-                sidebarCollapsed
-                  ? `${roleTitle}. Личный кабинет`
-                  : undefined
+                sidebarCollapsed ? `${roleTitle}. Личный кабинет` : undefined
               }
               onClick={() => closeMobile()}
               className={[
-                'flex min-w-0 flex-1 items-center gap-2 rounded-xl py-1.5 transition',
-                sidebarCollapsed ? 'justify-center px-1' : 'px-2',
+                'flex items-center gap-2 rounded-xl py-1.5 transition',
+                sidebarCollapsed
+                  ? 'w-full justify-center px-1'
+                  : 'min-w-0 flex-1 px-2',
                 light ? 'hover:bg-neutral-100' : 'hover:bg-white/5',
               ].join(' ')}
             >
@@ -321,13 +328,15 @@ export function RootLayout() {
               )}
             </Link>
 
-            <div
-              className={[
-                'w-px shrink-0 self-stretch min-h-[2.25rem]',
-                light ? 'bg-neutral-200' : 'bg-white/15',
-              ].join(' ')}
-              aria-hidden
-            />
+            {!sidebarCollapsed ? (
+              <div
+                className={[
+                  'w-px shrink-0 self-stretch min-h-[2.25rem]',
+                  light ? 'bg-neutral-200' : 'bg-white/15',
+                ].join(' ')}
+                aria-hidden
+              />
+            ) : null}
 
             <button
               type="button"
@@ -338,7 +347,8 @@ export function RootLayout() {
                 navigate('/login', { replace: true })
               }}
               className={[
-                'inline-flex shrink-0 items-center justify-center rounded-xl px-2 py-2 transition',
+                'inline-flex items-center justify-center rounded-xl py-2 transition',
+                sidebarCollapsed ? 'w-full px-2' : 'shrink-0 px-2',
                 light
                   ? 'text-neutral-600 hover:bg-neutral-100'
                   : 'text-neutral-300 hover:bg-white/5',
