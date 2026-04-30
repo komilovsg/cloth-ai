@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../shared/ui/button'
-import { Card } from '../../shared/ui/card'
 import { adminLogin } from '../../shared/api/api-client'
 
 export function LoginPage() {
@@ -10,9 +9,20 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
+  useLayoutEffect(() => {
+    document.documentElement.classList.add('dark')
+    document.body.style.backgroundColor = '#0a0a0a'
+    document.body.style.color = '#fafafa'
+    return () => {
+      document.documentElement.classList.remove('dark')
+      document.body.style.backgroundColor = ''
+      document.body.style.color = ''
+    }
+  }, [])
+
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-neutral-950 px-4 text-neutral-50">
-      <Card className="w-full max-w-sm space-y-4 p-6 ring-1 ring-white/10">
+      <div className="w-full max-w-sm space-y-4 rounded-2xl bg-neutral-900/80 p-6 ring-1 ring-white/10">
         <div>
           <h1 className="text-lg font-semibold">CLOTH.AI Admin</h1>
           <p className="mt-1 text-xs text-neutral-400">Введите пароль API (ADMIN_PASSWORD).</p>
@@ -48,7 +58,7 @@ export function LoginPage() {
             {pending ? 'Вход…' : 'Войти'}
           </Button>
         </form>
-      </Card>
+      </div>
     </div>
   )
 }

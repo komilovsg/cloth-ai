@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Class-based dark mode (dashboard toggles `.dark` on <html>). Do not use OS `prefers-color-scheme`. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   color-scheme: light dark;
 }

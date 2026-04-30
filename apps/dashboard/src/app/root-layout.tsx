@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { setAdminToken } from './auth-gate'
 import {
   LuLayoutDashboard,
@@ -39,8 +39,18 @@ function NavItem({
         ].join(' ')
       }
     >
-      <span className={light ? 'text-neutral-600' : 'text-neutral-200'}>{icon}</span>
-      {label}
+      {({ isActive }) => (
+        <>
+          <span
+            className={
+              isActive ? 'text-white' : light ? 'text-neutral-600' : 'text-neutral-200'
+            }
+          >
+            {icon}
+          </span>
+          {label}
+        </>
+      )}
     </NavLink>
   )
 }
@@ -53,6 +63,22 @@ export function RootLayout() {
   const [mobileNav, setMobileNav] = useState(false)
 
   const light = theme === 'light'
+
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    if (theme === 'light') {
+      document.body.style.backgroundColor = '#fafafa'
+      document.body.style.color = '#171717'
+    } else {
+      document.body.style.backgroundColor = '#0a0a0a'
+      document.body.style.color = '#fafafa'
+    }
+    return () => {
+      document.documentElement.classList.remove('dark')
+      document.body.style.backgroundColor = ''
+      document.body.style.color = ''
+    }
+  }, [theme])
 
   const shell = light ? 'min-h-dvh bg-zinc-50 text-neutral-900' : 'min-h-dvh bg-neutral-950 text-neutral-50'
   const headerBar = light

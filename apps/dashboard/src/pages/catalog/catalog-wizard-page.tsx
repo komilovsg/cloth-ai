@@ -28,25 +28,24 @@ function StepPill({
 }) {
   const isDone = step < current
   const isActive = step === current
+  const outer = isActive
+    ? 'bg-violet-600 text-white shadow-sm ring-violet-500 dark:bg-violet-500/20 dark:text-neutral-50 dark:shadow-none dark:ring-violet-400/40'
+    : isDone
+      ? 'bg-violet-50 text-violet-950 ring-violet-300 dark:bg-neutral-950/60 dark:text-neutral-200 dark:ring-white/10'
+      : 'bg-neutral-100 text-neutral-900 ring-neutral-300 dark:bg-neutral-950/30 dark:text-neutral-400 dark:ring-white/10'
+
+  const inner = isDone
+    ? 'bg-violet-600 text-white ring-violet-400 dark:bg-violet-500 dark:text-white dark:ring-violet-300'
+    : isActive
+      ? 'bg-white text-violet-700 ring-violet-300 dark:bg-neutral-950 dark:text-neutral-50 dark:ring-white/15'
+      : 'bg-neutral-200 text-neutral-900 ring-neutral-300 dark:bg-neutral-950 dark:text-neutral-500 dark:ring-white/10'
+
   return (
-    <div
-      className={[
-        'flex items-center gap-2 rounded-full px-3 py-2 text-xs ring-1',
-        isActive
-          ? 'bg-violet-500/20 text-neutral-50 ring-violet-400/40'
-          : isDone
-            ? 'bg-neutral-950/60 text-neutral-200 ring-white/10'
-            : 'bg-neutral-950/30 text-neutral-400 ring-white/10',
-      ].join(' ')}
-    >
+    <div className={['flex items-center gap-2 rounded-full px-3 py-2 text-xs ring-1', outer].join(' ')}>
       <span
         className={[
           'grid h-5 w-5 place-items-center rounded-full text-[11px] font-semibold ring-1',
-          isDone
-            ? 'bg-violet-500 text-white ring-violet-300'
-            : isActive
-              ? 'bg-neutral-950 text-neutral-50 ring-white/15'
-              : 'bg-neutral-950 text-neutral-500 ring-white/10',
+          inner,
         ].join(' ')}
       >
         {isDone ? <LuCheck className="h-3.5 w-3.5" /> : step}
@@ -164,7 +163,7 @@ export function CatalogWizardPage() {
           <h1 className="text-xl font-semibold tracking-tight">
             {isEdit ? 'Редактировать товар' : 'Добавить товар'}
           </h1>
-          <p className="mt-1 text-sm text-neutral-300">
+          <p className="mt-1 text-sm font-normal text-neutral-900 dark:text-neutral-300">
             Мастер: фото → генерация (OpenAI) → публикация.
           </p>
         </div>
@@ -176,7 +175,7 @@ export function CatalogWizardPage() {
       </header>
 
       {isEdit && rowQuery.isLoading && (
-        <Card className="p-4 text-sm text-neutral-200">Загружаем товар…</Card>
+        <Card className="p-4 text-sm font-normal text-neutral-900 dark:text-neutral-200">Загружаем товар…</Card>
       )}
       {isEdit && rowQuery.isError && (
         <Card className="p-4">
@@ -195,16 +194,18 @@ export function CatalogWizardPage() {
             <div className="space-y-3">
               <div className="text-sm font-medium">Фото</div>
               <div
-                className="rounded-2xl bg-neutral-950/60 p-4 ring-1 ring-white/10"
+                className="rounded-2xl bg-violet-50 p-4 ring-1 ring-violet-200 dark:bg-neutral-950/60 dark:ring-white/10"
                 aria-busy={isUploadingPhoto}
               >
                 <div className="flex items-center gap-3">
                   <div className="grid h-11 w-11 place-items-center rounded-2xl bg-violet-500/15 ring-1 ring-violet-400/30">
-                    <LuImagePlus className="h-5 w-5 text-violet-200" />
+                    <LuImagePlus className="h-5 w-5 text-violet-700 dark:text-violet-200" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold">Загрузить фото</div>
-                    <div className="mt-0.5 text-xs text-neutral-300">
+                    <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-50">
+                      Загрузить фото
+                    </div>
+                    <div className="mt-0.5 text-xs font-normal text-neutral-700 dark:text-neutral-300">
                       JPG / PNG / WebP → S3, затем генерация на шаге 2.
                     </div>
                   </div>
@@ -219,7 +220,7 @@ export function CatalogWizardPage() {
                     {isUploadingPhoto ? (
                       <>
                         <span
-                          className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white"
+                          className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-800 dark:border-white/25 dark:border-t-white"
                           aria-hidden
                         />
                         Загрузка…
@@ -232,7 +233,9 @@ export function CatalogWizardPage() {
                     )}
                   </Button>
                   {isUploadingPhoto && (
-                    <span className="text-xs text-neutral-400">Отправляем файл на сервер…</span>
+                    <span className="text-xs font-normal text-neutral-700 dark:text-neutral-400">
+                      Отправляем файл на сервер…
+                    </span>
                   )}
                 </div>
                 {uploadBanner && (
@@ -241,15 +244,15 @@ export function CatalogWizardPage() {
                     className={[
                       'mt-3 flex items-start gap-2 rounded-xl px-3 py-2 text-xs ring-1',
                       uploadBanner.kind === 'success'
-                        ? 'bg-emerald-950/40 text-emerald-100 ring-emerald-500/35'
-                        : 'bg-red-950/40 text-red-100 ring-red-500/35',
+                        ? 'bg-emerald-50 text-emerald-900 ring-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-100 dark:ring-emerald-500/35'
+                        : 'bg-red-50 text-red-900 ring-red-300 dark:bg-red-950/40 dark:text-red-100 dark:ring-red-500/35',
                     ].join(' ')}
                   >
                     {uploadBanner.kind === 'error' && (
                       <LuCircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                     )}
                     {uploadBanner.kind === 'success' && (
-                      <LuCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden />
+                      <LuCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" aria-hidden />
                     )}
                     <span>{uploadBanner.message}</span>
                   </div>
@@ -259,11 +262,13 @@ export function CatalogWizardPage() {
                     <img
                       src={photoPreviewUrl}
                       alt="Превью загруженного фото"
-                      className="max-h-48 w-full object-contain bg-neutral-950"
+                      className="max-h-48 w-full object-contain bg-neutral-100 dark:bg-neutral-950"
                     />
                     {isUploadingPhoto && (
-                      <div className="absolute inset-0 grid place-items-center bg-neutral-950/55 backdrop-blur-[2px]">
-                        <span className="text-xs font-medium text-neutral-100">Обновляем превью…</span>
+                      <div className="absolute inset-0 grid place-items-center bg-black/40 backdrop-blur-[2px] dark:bg-neutral-950/55">
+                        <span className="text-xs font-medium text-white dark:text-neutral-100">
+                          Обновляем превью…
+                        </span>
                       </div>
                     )}
                   </div>
@@ -275,30 +280,30 @@ export function CatalogWizardPage() {
               <div className="text-sm font-medium">Данные</div>
               <div className="grid gap-3">
                 <div className="grid gap-2">
-                  <label className="text-xs text-neutral-300">Название</label>
+                  <label className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Название</label>
                   <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="rounded-xl bg-neutral-950 px-3 py-2 text-sm ring-1 ring-white/10"
+                    className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 ring-1 ring-neutral-200 dark:border-transparent dark:bg-neutral-950 dark:text-neutral-50 dark:placeholder:text-neutral-500 dark:ring-white/10"
                     placeholder="Платье синее"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="grid gap-2">
-                    <label className="text-xs text-neutral-300">Цена (TJS)</label>
+                    <label className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Цена (TJS)</label>
                     <input
                       type="number"
                       value={priceTjs}
                       onChange={(e) => setPriceTjs(Number(e.target.value))}
-                      className="rounded-xl bg-neutral-950 px-3 py-2 text-sm ring-1 ring-white/10"
+                      className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 ring-1 ring-neutral-200 dark:border-transparent dark:bg-neutral-950 dark:text-neutral-50 dark:ring-white/10"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <label className="text-xs text-neutral-300">Категория</label>
+                    <label className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Категория</label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value as Category)}
-                      className="rounded-xl bg-neutral-950 px-3 py-2 text-sm ring-1 ring-white/10"
+                      className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 ring-1 ring-neutral-200 dark:border-transparent dark:bg-neutral-950 dark:text-neutral-50 dark:ring-white/10"
                     >
                       <option value="tops">Топ</option>
                       <option value="bottoms">Низ</option>
@@ -323,11 +328,12 @@ export function CatalogWizardPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-sm font-semibold">Генерация типажей</div>
-              <div className="mt-1 text-xs text-neutral-300">
+              <div className="mt-1 text-xs font-normal text-neutral-900 dark:text-neutral-300">
                 GPT-4o-mini + DALL·E 3 (три полноформатных кадра). Занимает 1–3 минуты.
               </div>
-              <div className="mt-3 rounded-xl bg-neutral-950/40 p-3 text-xs leading-relaxed text-neutral-300 ring-1 ring-white/10 dark:bg-neutral-950/40">
-                Ниже четыре превью: <span className="text-neutral-100">исходное фото</span> и три
+              <div className="mt-3 rounded-xl bg-neutral-50 p-3 text-xs leading-relaxed text-neutral-900 ring-1 ring-neutral-200 dark:bg-neutral-950/40 dark:text-neutral-300 dark:ring-white/10">
+                Ниже четыре превью:{' '}
+                <span className="font-medium text-neutral-950 dark:text-neutral-100">исходное фото</span> и три
                 типажа (высокий / средний / плотный). Нажмите «Запустить» и дождитесь статуса
                 генерации — затем откройте шаг «Публикация».
               </div>
@@ -391,11 +397,11 @@ export function CatalogWizardPage() {
             {(['original', 'tall', 'mid', 'curvy'] as const).map((k) => (
               <div
                 key={k}
-                className={[
-                  'aspect-[3/4] w-full overflow-hidden rounded-2xl ring-1 ring-white/10',
+                  className={[
+                  'aspect-[3/4] w-full overflow-hidden rounded-2xl ring-1 ring-neutral-200 dark:ring-white/10',
                   isGenerating || rowQuery.data?.status === 'generating'
-                    ? 'animate-pulse bg-neutral-900'
-                    : 'bg-neutral-950/60',
+                    ? 'animate-pulse bg-neutral-200 dark:bg-neutral-900'
+                    : 'bg-neutral-100 dark:bg-neutral-950/60',
                 ].join(' ')}
               >
                 {!isGenerating && rowQuery.data?.status !== 'generating' && (
@@ -436,7 +442,7 @@ export function CatalogWizardPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-sm font-semibold">Проверка и публикация</div>
-              <div className="mt-1 text-xs text-neutral-300">
+              <div className="mt-1 text-xs font-normal text-neutral-900 dark:text-neutral-300">
                 Продавец видит оригинал + 3 типажа. Потом публикует.
               </div>
             </div>
@@ -462,11 +468,11 @@ export function CatalogWizardPage() {
                 ['Плотный', tiles.curvy],
               ] as const
             ).map(([label, url]) => (
-              <div key={label} className="overflow-hidden rounded-2xl ring-1 ring-white/10">
-                <div className="aspect-[3/4] w-full bg-neutral-950">
+              <div key={label} className="overflow-hidden rounded-2xl ring-1 ring-neutral-200 dark:ring-white/10">
+                <div className="aspect-[3/4] w-full bg-neutral-100 dark:bg-neutral-950">
                   <img src={url} alt={label} className="h-full w-full object-cover" />
                 </div>
-                <div className="p-2 text-xs text-neutral-300">{label}</div>
+                <div className="p-2 text-xs font-normal text-neutral-900 dark:text-neutral-300">{label}</div>
               </div>
             ))}
           </div>
@@ -495,9 +501,9 @@ export function CatalogWizardPage() {
             выше.
           </div>
 
-          <div className="mt-3 text-xs text-neutral-400">
+          <div className="mt-3 text-xs font-normal text-neutral-700 dark:text-neutral-400">
             {workingId ? `ID: ${workingId}` : 'ID появится после создания'} • {title || '—'} • {priceTjs}{' '}
-            TJS • {category}
+            TJS • {category === 'tops' ? 'Топ' : category === 'bottoms' ? 'Низ' : 'Платья'}
           </div>
         </Card>
       )}

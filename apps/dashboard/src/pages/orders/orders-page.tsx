@@ -56,32 +56,32 @@ export function OrdersPage() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Заказы</h1>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="mt-1 text-sm font-normal text-neutral-900 dark:text-neutral-400">
             Покупатель — имя из Telegram (или то, что передал клиент при оформлении).
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-xs text-neutral-600 dark:text-neutral-400">Статус</label>
+          <label className="text-xs font-normal text-neutral-800 dark:text-neutral-400">Статус</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as 'all' | OrderStatus)}
-            className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-950"
+            className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
           >
             <option value="all">Все</option>
             {(Object.keys(STATUS_LABEL_RU) as OrderStatus[]).map((k) => (
               <option key={k} value={k}>
-                {STATUS_LABEL_RU[k]} ({k})
+                {STATUS_LABEL_RU[k]}
               </option>
             ))}
           </select>
         </div>
       </header>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden ring-1 ring-neutral-200 dark:ring-white/10">
         <div className="overflow-x-auto">
           <div className="min-w-[980px]">
-            <div className="grid grid-cols-[1fr_1fr_1.2fr_1fr_1fr_0.75fr_1.25fr] gap-0 border-b border-neutral-200 bg-neutral-50 px-4 py-3 text-xs text-neutral-600 dark:border-white/10 dark:bg-neutral-950/60 dark:text-neutral-400">
+            <div className="grid grid-cols-[1fr_1fr_1.2fr_1fr_1fr_0.75fr_1.25fr] gap-0 border-b border-neutral-200 bg-white px-4 py-3 text-xs font-medium text-neutral-900 dark:border-white/10 dark:bg-neutral-950/60 dark:text-neutral-400">
               <div>ID</div>
               <div>Дата</div>
               <div>Покупатель</div>
@@ -91,7 +91,7 @@ export function OrdersPage() {
               <div className="text-right">Действия</div>
             </div>
 
-            <div className="divide-y divide-neutral-200 dark:divide-white/10">
+            <div className="divide-y divide-neutral-200 bg-white dark:divide-white/10 dark:bg-transparent">
               {orders.isLoading && (
                 <div className="px-4 py-8 text-center text-sm text-neutral-600 dark:text-neutral-400">
                   Загружаем заказы…
@@ -116,7 +116,7 @@ export function OrdersPage() {
                 >
                   <div className="grid grid-cols-[1fr_1fr_1.2fr_1fr_1fr_0.75fr_1.25fr] items-center gap-2 px-4 py-3 text-sm">
                     <div className="break-all font-mono text-xs font-medium">{o.orderId}</div>
-                    <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                    <div className="text-xs font-normal text-neutral-900 dark:text-neutral-400">
                       {new Date(o.createdAtIso).toLocaleString()}
                     </div>
                     <div className="min-w-0 truncate font-medium">{o.customerName}</div>
@@ -124,13 +124,11 @@ export function OrdersPage() {
                       <Pill tone={methodBadgeClass(o.method as CheckoutMethod)}>
                         {METHOD_LABEL_RU[o.method as CheckoutMethod] ?? o.method}
                       </Pill>
-                      <div className="mt-1 font-mono text-[10px] text-neutral-500">{o.method}</div>
                     </div>
                     <div className="min-w-0">
                       <Pill tone={statusBadgeClass(o.status as OrderStatus)}>
                         {STATUS_LABEL_RU[o.status as OrderStatus] ?? o.status}
                       </Pill>
-                      <div className="mt-1 font-mono text-[10px] text-neutral-500">{o.status}</div>
                     </div>
                     <div className="text-right font-semibold">{o.totalTjs} TJS</div>
                     <div className="flex flex-wrap justify-end gap-2">

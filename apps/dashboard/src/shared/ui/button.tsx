@@ -15,8 +15,10 @@ export function Button({
 
   const variants: Record<Variant, string> = {
     primary: 'bg-violet-500 text-white hover:bg-violet-400',
-    secondary: 'bg-neutral-800 text-neutral-50 hover:bg-neutral-700',
-    ghost: 'bg-transparent text-neutral-100 hover:bg-neutral-900',
+    secondary:
+      'bg-neutral-100 text-neutral-900 ring-1 ring-neutral-300 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-50 dark:ring-transparent dark:hover:bg-neutral-700',
+    ghost:
+      'bg-transparent text-neutral-800 hover:bg-neutral-100 dark:text-neutral-100 dark:hover:bg-neutral-900',
   }
 
   return (
