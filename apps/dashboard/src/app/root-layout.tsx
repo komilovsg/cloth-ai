@@ -10,11 +10,12 @@ import {
   LuPlus,
   LuStore,
   LuSun,
+  LuUsers,
   LuX,
 } from 'react-icons/lu'
 import { useToastStore } from '../shared/toast-store'
 import { useDashboardPrefsStore } from '../features/dashboard-prefs-store'
-import { useShopProfileQuery } from '../shared/api/queries'
+import { useAuthMeQuery, useEndImpersonationMutation, useShopProfileQuery } from '../shared/api/queries'
 
 function NavItem({
   to,
@@ -64,9 +65,13 @@ export function RootLayout() {
   const setDashTheme = useDashboardPrefsStore((s) => s.setTheme)
   const [mobileNav, setMobileNav] = useState(false)
   const shopProfile = useShopProfileQuery()
+  const authMe = useAuthMeQuery()
+  const endImpersonation = useEndImpersonationMutation()
 
   const light = theme === 'light'
 
+  const showSellersNav =
+    authMe.data?.role === 'super_admin' && authMe.data && !authMe.data.impersonation
   useLayoutEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
     if (theme === 'light') {
@@ -95,14 +100,36 @@ export function RootLayout() {
       <NavItem to="/catalog" label="Каталог" icon={<LuPackage className="h-4 w-4" />} light={light} />
       <NavItem to="/catalog/new" label="Добавить" icon={<LuPlus className="h-4 w-4" />} light={light} />
       <NavItem to="/shop" label="Магазин" icon={<LuStore className="h-4 w-4" />} light={light} />
+      {showSellersNav && (
+        <NavItem to="/sellers" label="Продавцы" icon={<LuUsers className="h-4 w-4" />} light={light} />
+      )}
     </>
   )
-
   return (
     <div className={shell}>
       {toastMsg && (
         <div className="fixed left-1/2 top-4 z-[80] max-w-md -translate-x-1/2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-xl ring-1 ring-emerald-400/40">
           {toastMsg}
+        </div>
+      )}
+
+      {authMe.data?.impersonation && (
+        <div
+          className={
+            light
+              ? 'border-b border-amber-300 bg-amber-50 px-4 py-2 text-center text-xs font-normal text-amber-950'
+              : 'border-b border-amber-500/40 bg-amber-950/95 px-4 py-2 text-center text-xs font-normal text-amber-100'
+          }
+        >
+          Вы действуете как магазин «{shopProfile.data?.shopName?.trim() || '…'}».{' '}
+          <button
+            type="button"
+            className="font-semibold underline decoration-amber-600/70 underline-offset-2 hover:opacity-90 dark:decoration-amber-300/70"
+            disabled={endImpersonation.isPending}
+            onClick={() => endImpersonation.mutate()}
+          >
+            Выйти из режима продавца
+          </button>
         </div>
       )}
 

@@ -1,7 +1,9 @@
 import { useLayoutEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../shared/ui/button'
 import { dashboardLogin } from '../../shared/api/api-client'
+import { queryKeys } from '../../shared/api/queries'
 
 function isMockApiMode(): boolean {
   const raw = import.meta.env.VITE_API_MODE as string | undefined
@@ -10,6 +12,7 @@ function isMockApiMode(): boolean {
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -45,6 +48,7 @@ export function LoginPage() {
             setPending(true)
             try {
               await dashboardLogin(email, password)
+              qc.invalidateQueries({ queryKey: queryKeys.authMe() })
               navigate('/', { replace: true })
             } catch (err) {
               setError(err instanceof Error ? err.message : 'Ошибка входа')
@@ -78,6 +82,11 @@ export function LoginPage() {
             {pending ? 'Вход…' : 'Войти'}
           </Button>
         </form>
+        <div className="text-center text-xs text-neutral-500">
+          <Link to="/forgot-password" className="text-violet-400 hover:underline">
+            Забыли пароль?
+          </Link>
+        </div>
       </div>
     </div>
   )

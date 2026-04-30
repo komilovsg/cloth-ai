@@ -53,3 +53,22 @@ export interface ShopProfileDto {
   updatedAtIso: string
 }
 
+export interface AuthMeDto {
+  role: string
+  email?: string | null
+  sellerId?: string | null
+  impersonation: boolean
+}
+
+export interface SellerSummaryDto {
+  id: string
+  slug?: string | null
+  status: string
+  shopName: string
+  createdAtIso: string
+}
+
+export interface SellerListDto {
+  items: SellerSummaryDto[]
+  total: number
+}

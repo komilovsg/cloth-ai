@@ -1,7 +1,15 @@
 import type { CatalogListResponse, GetOrderResponse, OrderStatus } from '@cloth-ai/contracts'
 import * as mock from './mock-api'
 import { setAdminToken } from '../../app/auth-gate'
-import type { CatalogRowDto, OrderDetailsDto, OrderSummaryDto, ShopProfileDto } from './types'
+import type {
+  AuthMeDto,
+  CatalogRowDto,
+  OrderDetailsDto,
+  OrderSummaryDto,
+  SellerListDto,
+  SellerSummaryDto,
+  ShopProfileDto,
+} from './types'
 
 type ApiMode = 'mock' | 'real'
 
@@ -15,6 +23,10 @@ function getEnv(name: string): string | undefined {
 function getApiMode(): ApiMode {
   const raw = getEnv('VITE_API_MODE')?.toLowerCase()
   return raw === 'real' ? 'real' : 'mock'
+}
+
+export function getDashboardApiMode(): ApiMode {
+  return getApiMode()
 }
 
 function getBaseUrl(): string {
@@ -100,6 +112,116 @@ export async function dashboardLogin(email: string, password: string): Promise<v
     },
     'none',
   )
+  setAdminToken(data.accessToken)
+}
+
+export async function fetchAuthMe(): Promise<AuthMeDto> {
+  if (getApiMode() === 'mock') return mock.fetchAuthMe()
+  return requestJson<AuthMeDto>('/v1/auth/me')
+}
+
+export async function passwordForgot(email: string): Promise<void> {
+  if (getApiMode() === 'mock') {
+    await mock.passwordForgot(email)
+    return
+  }
+  await requestJson<{ ok: boolean }>(
+    '/v1/auth/password/forgot',
+    {
+      method: 'POST',
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    },
+    'none',
+  )
+}
+
+export async function passwordReset(token: string, newPassword: string): Promise<void> {
+  if (getApiMode() === 'mock') {
+    await mock.passwordReset(token, newPassword)
+    return
+  }
+  await requestJson<{ ok: boolean }>(
+    '/v1/auth/password/reset',
+    {
+      method: 'POST',
+      body: JSON.stringify({ token: token.trim(), newPassword }),
+    },
+    'none',
+  )
+}
+
+export async function passwordChangeStart(currentPassword: string, newPassword: string): Promise<string> {
+  if (getApiMode() === 'mock') return mock.passwordChangeStart(currentPassword, newPassword)
+  const data = await requestJson<{ changeRequestId: string }>('/v1/auth/password/change/start', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+  return data.changeRequestId
+}
+
+export async function passwordChangeConfirm(changeRequestId: string, code: string): Promise<void> {
+  if (getApiMode() === 'mock') return mock.passwordChangeConfirm(changeRequestId, code)
+  await requestJson<{ ok: boolean }>('/v1/auth/password/change/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ changeRequestId, code }),
+  })
+}
+
+export async function listSellers(page = 1, limit = 50): Promise<SellerListDto> {
+  if (getApiMode() === 'mock') return mock.listSellers(page, limit)
+  const qs = new URLSearchParams({ page: String(page), limit: String(limit) })
+  return requestJson<SellerListDto>(`/v1/admin/sellers?${qs}`)
+}
+
+export async function createSeller(input: { shopName: string; slug?: string }): Promise<SellerSummaryDto> {
+  if (getApiMode() === 'mock') return mock.createSeller(input)
+  return requestJson<SellerSummaryDto>('/v1/admin/sellers', {
+    method: 'POST',
+    body: JSON.stringify({
+      shopName: input.shopName,
+      ...(input.slug?.trim() ? { slug: input.slug.trim() } : {}),
+    }),
+  })
+}
+
+export async function patchSeller(input: { sellerId: string; status: string }): Promise<SellerSummaryDto> {
+  if (getApiMode() === 'mock') return mock.patchSeller(input)
+  return requestJson<SellerSummaryDto>(`/v1/admin/sellers/${encodeURIComponent(input.sellerId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: input.status }),
+  })
+}
+
+export async function createSellerAdminUser(input: {
+  email: string
+  password: string
+  sellerId: string
+}): Promise<void> {
+  if (getApiMode() === 'mock') return mock.createSellerAdminUser(input)
+  await requestJson<{ ok: boolean }>('/v1/admin/users', {
+    method: 'POST',
+    body: JSON.stringify({
+      email: input.email.trim().toLowerCase(),
+      password: input.password,
+      sellerId: input.sellerId,
+    }),
+  })
+}
+
+export async function impersonateSeller(sellerId: string): Promise<void> {
+  if (getApiMode() === 'mock') return mock.impersonateSeller(sellerId)
+  const data = await requestJson<{ accessToken: string }>('/v1/admin/impersonate', {
+    method: 'POST',
+    body: JSON.stringify({ sellerId }),
+  })
+  setAdminToken(data.accessToken)
+}
+
+export async function endImpersonation(): Promise<void> {
+  if (getApiMode() === 'mock') return mock.endImpersonation()
+  const data = await requestJson<{ accessToken: string }>('/v1/admin/impersonate/end', {
+    method: 'POST',
+  })
   setAdminToken(data.accessToken)
 }
 

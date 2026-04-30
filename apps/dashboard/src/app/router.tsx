@@ -8,9 +8,14 @@ import { OverviewPage } from '../pages/overview/overview-page'
 import { CatalogWizardPage } from '../pages/catalog/catalog-wizard-page'
 import { LoginPage } from '../pages/login/login-page'
 import { ShopProfilePage } from '../pages/shop/shop-profile-page'
+import { ForgotPasswordPage } from '../pages/auth/forgot-password-page'
+import { ResetPasswordPage } from '../pages/auth/reset-password-page'
+import { SellersPage } from '../pages/sellers/sellers-page'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
   {
     path: '/',
     element: (
@@ -26,6 +31,7 @@ export const router = createBrowserRouter([
       { path: 'catalog/new', element: <CatalogWizardPage /> },
       { path: 'catalog/:itemId/edit', element: <CatalogWizardPage /> },
       { path: 'shop', element: <ShopProfilePage /> },
+      { path: 'sellers', element: <SellersPage /> },
     ],
   },
 ])

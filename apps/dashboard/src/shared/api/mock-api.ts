@@ -1,6 +1,14 @@
 import type { CatalogListResponse, GetOrderResponse, OrderStatus } from '@cloth-ai/contracts'
 import { MOCK_ORDERS } from '../../features/orders/mock-orders'
-import type { CatalogRowDto, OrderDetailsDto, OrderSummaryDto, ShopProfileDto } from './types'
+import type {
+  AuthMeDto,
+  CatalogRowDto,
+  OrderDetailsDto,
+  OrderSummaryDto,
+  SellerListDto,
+  SellerSummaryDto,
+  ShopProfileDto,
+} from './types'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -200,5 +208,95 @@ export async function uploadShopLogo(file: File): Promise<ShopProfileDto> {
     updatedAtIso: new Date().toISOString(),
   }
   return { ...shopProfileMock }
+}
+
+let mockAuthMe: AuthMeDto = {
+  role: 'super_admin',
+  email: 'admin@mock.local',
+  sellerId: null,
+  impersonation: false,
+}
+
+let mockSellers: SellerSummaryDto[] = []
+
+export async function fetchAuthMe(): Promise<AuthMeDto> {
+  await sleep(50)
+  return { ...mockAuthMe }
+}
+
+export async function passwordForgot(_email: string): Promise<void> {
+  await sleep(250)
+}
+
+export async function passwordReset(_token: string, _newPassword: string): Promise<void> {
+  await sleep(250)
+}
+
+export async function passwordChangeStart(_current: string, _next: string): Promise<string> {
+  await sleep(200)
+  return '00000000-0000-0000-0000-00000000mock'
+}
+
+export async function passwordChangeConfirm(_id: string, _code: string): Promise<void> {
+  await sleep(200)
+}
+
+export async function listSellers(page: number, limit: number): Promise<SellerListDto> {
+  await sleep(150)
+  const start = (page - 1) * limit
+  const items = mockSellers.slice(start, start + limit)
+  return { items, total: mockSellers.length }
+}
+
+export async function createSeller(input: { shopName: string; slug?: string }): Promise<SellerSummaryDto> {
+  await sleep(200)
+  const id = `mock-seller-${mockSellers.length + 1}`
+  const row: SellerSummaryDto = {
+    id,
+    slug: input.slug?.trim() ? input.slug.trim() : null,
+    status: 'active',
+    shopName: input.shopName.trim() || 'Магазин',
+    createdAtIso: new Date().toISOString(),
+  }
+  mockSellers = [...mockSellers, row]
+  return row
+}
+
+export async function patchSeller(input: { sellerId: string; status: string }): Promise<SellerSummaryDto> {
+  await sleep(150)
+  const i = mockSellers.findIndex((s) => s.id === input.sellerId)
+  if (i < 0) throw new Error('Seller not found')
+  const prev = mockSellers[i]!
+  const next = { ...prev, status: input.status }
+  mockSellers = mockSellers.map((s, idx) => (idx === i ? next : s))
+  return next
+}
+
+export async function createSellerAdminUser(_input: {
+  email: string
+  password: string
+  sellerId: string
+}): Promise<void> {
+  await sleep(200)
+}
+
+export async function impersonateSeller(sellerId: string): Promise<void> {
+  await sleep(120)
+  mockAuthMe = {
+    role: 'seller_admin',
+    email: mockAuthMe.email,
+    sellerId,
+    impersonation: true,
+  }
+}
+
+export async function endImpersonation(): Promise<void> {
+  await sleep(120)
+  mockAuthMe = {
+    role: 'super_admin',
+    email: mockAuthMe.email ?? 'admin@mock.local',
+    sellerId: null,
+    impersonation: false,
+  }
 }
 
