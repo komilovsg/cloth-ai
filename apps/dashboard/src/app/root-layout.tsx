@@ -18,8 +18,10 @@ import {
 import { useToastStore } from '../shared/toast-store'
 import { useDashboardPrefsStore } from '../features/dashboard-prefs-store'
 import { useAuthMeQuery, useEndImpersonationMutation, useShopProfileQuery } from '../shared/api/queries'
+import { useIsLgUp } from '../hooks/use-is-lg-up'
 
 const SIDEBAR_COLLAPSED_KEY = 'clothai_dash_sidebar_collapsed'
+const MOBILE_DRAWER_COMPACT_KEY = 'clothai_dash_mobile_drawer_compact'
 
 function readCollapsed(): boolean {
   try {
@@ -32,6 +34,22 @@ function readCollapsed(): boolean {
 function writeCollapsed(v: boolean) {
   try {
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, v ? '1' : '0')
+  } catch {
+    /* ignore */
+  }
+}
+
+function readMobileDrawerCompact(): boolean {
+  try {
+    return localStorage.getItem(MOBILE_DRAWER_COMPACT_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writeMobileDrawerCompact(v: boolean) {
+  try {
+    localStorage.setItem(MOBILE_DRAWER_COMPACT_KEY, v ? '1' : '0')
   } catch {
     /* ignore */
   }
@@ -95,11 +113,15 @@ function SidebarLink({
 
 export function RootLayout() {
   const navigate = useNavigate()
+  const isLg = useIsLgUp()
   const toastMsg = useToastStore((s) => s.message)
   const theme = useDashboardPrefsStore((s) => s.theme)
   const setDashTheme = useDashboardPrefsStore((s) => s.setTheme)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [mobileDrawerCompact, setMobileDrawerCompact] = useState(readMobileDrawerCompact)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(readCollapsed)
+
+  const navCollapsed = sidebarCollapsed && isLg
 
   const shopProfile = useShopProfileQuery()
   const authMe = useAuthMeQuery()
@@ -111,6 +133,15 @@ export function RootLayout() {
     authMe.data?.role === 'super_admin' && authMe.data && !authMe.data.impersonation
 
   const closeMobile = () => setMobileSidebarOpen(false)
+
+  useLayoutEffect(() => {
+    if (isLg || !mobileSidebarOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [isLg, mobileSidebarOpen])
 
   useLayoutEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -145,7 +176,7 @@ export function RootLayout() {
         to="/"
         label="Обзор"
         icon={<LuLayoutDashboard className="h-5 w-5" />}
-        collapsed={sidebarCollapsed}
+        collapsed={navCollapsed}
         light={light}
         onNavigate={closeMobile}
       />
@@ -153,7 +184,7 @@ export function RootLayout() {
         to="/orders"
         label="Заказы"
         icon={<LuListOrdered className="h-5 w-5" />}
-        collapsed={sidebarCollapsed}
+        collapsed={navCollapsed}
         light={light}
         onNavigate={closeMobile}
       />
@@ -161,7 +192,7 @@ export function RootLayout() {
         to="/catalog"
         label="Каталог"
         icon={<LuPackage className="h-5 w-5" />}
-        collapsed={sidebarCollapsed}
+        collapsed={navCollapsed}
         light={light}
         onNavigate={closeMobile}
       />
@@ -169,7 +200,7 @@ export function RootLayout() {
         to="/catalog/new"
         label="Добавить товар"
         icon={<LuPlus className="h-5 w-5" />}
-        collapsed={sidebarCollapsed}
+        collapsed={navCollapsed}
         light={light}
         onNavigate={closeMobile}
       />
@@ -178,7 +209,7 @@ export function RootLayout() {
           to="/sellers"
           label="Продавцы"
           icon={<LuUsers className="h-5 w-5" />}
-          collapsed={sidebarCollapsed}
+          collapsed={navCollapsed}
           light={light}
           onNavigate={closeMobile}
         />
@@ -209,22 +240,40 @@ export function RootLayout() {
         className={[
           'fixed inset-y-0 left-0 z-50 flex flex-col border-r transition-all duration-200 lg:static lg:z-0',
           sidebarSurface,
-          sidebarCollapsed ? 'lg:w-[76px]' : 'w-56 lg:w-56',
+          mobileDrawerCompact ? 'max-lg:w-[min(100vw,18rem)]' : 'max-lg:w-full max-lg:max-w-none',
+          sidebarCollapsed ? 'lg:w-[76px]' : 'lg:w-56',
           mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         ].join(' ')}
       >
         <div
           className={[
-            'flex items-center gap-2 border-b px-3 py-3',
+            'flex flex-wrap items-center gap-2 border-b px-3 py-3',
             light ? 'border-neutral-200' : 'border-white/10',
           ].join(' ')}
         >
-          {!sidebarCollapsed && (
-            <div className="min-w-0 flex-1">
+          {!(isLg && sidebarCollapsed) && (
+            <div className="min-w-0 flex-1 basis-[60%] lg:basis-auto">
               <div className="truncate text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                 Меню
               </div>
             </div>
+          )}
+          {!isLg && (
+            <button
+              type="button"
+              className={
+                light
+                  ? 'rounded-lg px-2 py-1.5 text-[11px] font-medium text-neutral-600 ring-1 ring-neutral-200 hover:bg-neutral-100'
+                  : 'rounded-lg px-2 py-1.5 text-[11px] font-medium text-neutral-300 ring-1 ring-white/10 hover:bg-white/5'
+              }
+              onClick={() => {
+                const next = !mobileDrawerCompact
+                setMobileDrawerCompact(next)
+                writeMobileDrawerCompact(next)
+              }}
+            >
+              {mobileDrawerCompact ? 'На весь экран' : 'Узкая панель'}
+            </button>
           )}
           <button
             type="button"
@@ -265,7 +314,7 @@ export function RootLayout() {
         <div
           className={[
             'shrink-0 border-t p-2',
-            sidebarCollapsed ? 'flex flex-col items-center gap-2' : 'space-y-2',
+            navCollapsed ? 'flex flex-col items-center gap-2' : 'space-y-2',
             light ? 'border-neutral-200' : 'border-white/10',
           ].join(' ')}
         >
@@ -275,7 +324,7 @@ export function RootLayout() {
             onClick={() => setDashTheme(light ? 'dark' : 'light')}
             className={[
               'flex items-center gap-2 rounded-xl py-2 text-xs font-medium transition',
-              sidebarCollapsed ? 'w-full justify-center px-2' : 'w-full px-2 text-left',
+              navCollapsed ? 'w-full justify-center px-2' : 'w-full px-2 text-left',
               light
                 ? 'text-neutral-800 hover:bg-neutral-100'
                 : 'text-neutral-200 hover:bg-white/5',
@@ -286,12 +335,12 @@ export function RootLayout() {
             ) : (
               <LuMoon className="h-4 w-4 shrink-0 text-violet-300" aria-hidden />
             )}
-            {!sidebarCollapsed && <span>{light ? 'Светлая тема' : 'Тёмная тема'}</span>}
+            {!navCollapsed && <span>{light ? 'Светлая тема' : 'Тёмная тема'}</span>}
           </button>
 
           <div
             className={
-              sidebarCollapsed
+              navCollapsed
                 ? 'flex w-full flex-col items-center gap-2'
                 : 'flex items-stretch gap-2'
             }
@@ -299,12 +348,12 @@ export function RootLayout() {
             <Link
               to="/profile"
               title={
-                sidebarCollapsed ? `${roleTitle}. Личный кабинет` : undefined
+                navCollapsed ? `${roleTitle}. Личный кабинет` : undefined
               }
               onClick={() => closeMobile()}
               className={[
                 'flex items-center gap-2 rounded-xl py-1.5 transition',
-                sidebarCollapsed
+                navCollapsed
                   ? 'w-full justify-center px-1'
                   : 'min-w-0 flex-1 px-2',
                 light ? 'hover:bg-neutral-100' : 'hover:bg-white/5',
@@ -316,7 +365,7 @@ export function RootLayout() {
               >
                 {initials}
               </span>
-              {!sidebarCollapsed && (
+              {!navCollapsed && (
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-semibold leading-tight text-neutral-900 dark:text-neutral-50">
                     {roleTitle}
@@ -328,7 +377,7 @@ export function RootLayout() {
               )}
             </Link>
 
-            {!sidebarCollapsed ? (
+            {!navCollapsed ? (
               <div
                 className={[
                   'w-px shrink-0 self-stretch min-h-[2.25rem]',
@@ -348,7 +397,7 @@ export function RootLayout() {
               }}
               className={[
                 'inline-flex items-center justify-center rounded-xl py-2 transition',
-                sidebarCollapsed ? 'w-full px-2' : 'shrink-0 px-2',
+                navCollapsed ? 'w-full px-2' : 'shrink-0 px-2',
                 light
                   ? 'text-neutral-600 hover:bg-neutral-100'
                   : 'text-neutral-300 hover:bg-white/5',
@@ -405,12 +454,14 @@ export function RootLayout() {
                 className="h-9 w-9 shrink-0 rounded-xl bg-white object-contain ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/10"
                 loading="eager"
               />
-              <span className="truncate text-sm font-semibold tracking-tight">CLOTH.AI Admin</span>
+              <span className="truncate text-sm font-semibold tracking-tight max-lg:hidden">
+                CLOTH.AI Admin
+              </span>
             </Link>
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-6 sm:px-4">
           <Outlet />
         </main>
       </div>

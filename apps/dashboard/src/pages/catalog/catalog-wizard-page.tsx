@@ -158,8 +158,8 @@ export function CatalogWizardPage() {
         }}
       />
 
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
           <h1 className="text-xl font-semibold tracking-tight">
             {isEdit ? 'Редактировать товар' : 'Добавить товар'}
           </h1>
@@ -167,7 +167,7 @@ export function CatalogWizardPage() {
             Мастер: фото → генерация (OpenAI) → публикация.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <StepPill step={1} current={step} label="Данные" />
           <StepPill step={2} current={step} label="Генерация" />
           <StepPill step={3} current={step} label="Публикация" />
@@ -197,7 +197,7 @@ export function CatalogWizardPage() {
                 className="rounded-2xl bg-violet-50 p-4 ring-1 ring-violet-200 dark:bg-neutral-950/60 dark:ring-white/10"
                 aria-busy={isUploadingPhoto}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <div className="grid h-11 w-11 place-items-center rounded-2xl bg-violet-500/15 ring-1 ring-violet-400/30">
                     <LuImagePlus className="h-5 w-5 text-violet-700 dark:text-violet-200" />
                   </div>
@@ -210,10 +210,11 @@ export function CatalogWizardPage() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                   <Button
                     variant="secondary"
                     type="button"
+                    className="w-full sm:w-auto"
                     disabled={isUploadingPhoto}
                     onClick={() => fileRef.current?.click()}
                   >
@@ -288,7 +289,7 @@ export function CatalogWizardPage() {
                     placeholder="Платье синее"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="grid gap-2">
                     <label className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Цена (TJS)</label>
                     <input
@@ -314,7 +315,7 @@ export function CatalogWizardPage() {
               </div>
 
               <div className="pt-2">
-                <Button disabled={!canContinue1} onClick={() => setStep(2)}>
+                <Button className="w-full sm:w-auto" disabled={!canContinue1} onClick={() => setStep(2)}>
                   Дальше
                 </Button>
               </div>
@@ -325,8 +326,8 @@ export function CatalogWizardPage() {
 
       {step === 2 && (
         <Card className="p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+            <div className="min-w-0">
               <div className="text-sm font-semibold">Генерация типажей</div>
               <div className="mt-1 text-xs font-normal text-neutral-900 dark:text-neutral-300">
                 GPT-4o-mini + DALL·E 3 (три полноформатных кадра). Занимает 1–3 минуты.
@@ -339,6 +340,7 @@ export function CatalogWizardPage() {
               </div>
             </div>
             <Button
+              className="w-full shrink-0 sm:w-auto sm:self-start"
               disabled={isGenerating}
               onClick={async () => {
                 setIsGenerating(true)
@@ -393,7 +395,7 @@ export function CatalogWizardPage() {
             </div>
           )}
 
-          <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {(['original', 'tall', 'mid', 'curvy'] as const).map((k) => (
               <div
                 key={k}
@@ -423,11 +425,12 @@ export function CatalogWizardPage() {
             ))}
           </div>
 
-          <div className="mt-4 flex gap-2">
-            <Button variant="secondary" onClick={() => setStep(1)} disabled={isGenerating}>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Button variant="secondary" className="w-full sm:w-auto" onClick={() => setStep(1)} disabled={isGenerating}>
               Назад
             </Button>
             <Button
+              className="w-full sm:w-auto"
               onClick={() => setStep(3)}
               disabled={isGenerating || rowQuery.data?.status !== 'generated'}
             >
@@ -439,14 +442,15 @@ export function CatalogWizardPage() {
 
       {step === 3 && (
         <Card className="p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+            <div className="min-w-0">
               <div className="text-sm font-semibold">Проверка и публикация</div>
               <div className="mt-1 text-xs font-normal text-neutral-900 dark:text-neutral-300">
                 Продавец видит оригинал + 3 типажа. Потом публикует.
               </div>
             </div>
             <Button
+              className="w-full shrink-0 sm:w-auto sm:self-start"
               onClick={async () => {
                 if (!workingId) return
                 await setCatalogStatus({ id: workingId, status: 'published' })
@@ -459,7 +463,7 @@ export function CatalogWizardPage() {
             </Button>
           </div>
 
-          <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {(
               [
                 ['Оригинал', tiles.original],
@@ -482,9 +486,10 @@ export function CatalogWizardPage() {
             ))}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Button
               variant="secondary"
+              className="w-full sm:w-auto"
               onClick={() => {
                 setTitle('')
                 setPriceTjs(199)
@@ -495,7 +500,7 @@ export function CatalogWizardPage() {
             >
               Новый товар (шаг 1)
             </Button>
-            <Button variant="ghost" onClick={() => setStep(2)}>
+            <Button variant="ghost" className="w-full sm:w-auto" onClick={() => setStep(2)}>
               Перегенерировать
             </Button>
           </div>

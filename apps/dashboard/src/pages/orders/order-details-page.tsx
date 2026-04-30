@@ -57,15 +57,17 @@ export function OrderDetailsPage() {
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-xl font-semibold tracking-tight">Заказ {id}</h1>
           <p className="mt-1 text-sm font-normal text-neutral-900 dark:text-neutral-300">
             Детали, статусы и действия для продавца.
           </p>
         </div>
-        <Link to="/orders">
-          <Button variant="ghost">← К списку</Button>
+        <Link to="/orders" className="w-full shrink-0 sm:w-auto">
+          <Button variant="ghost" className="w-full sm:w-auto">
+            ← К списку
+          </Button>
         </Link>
       </header>
 
@@ -83,10 +85,10 @@ export function OrderDetailsPage() {
       ) : order.data ? (
         <>
           <Card className="p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-1">
                 <div className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Статус</div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
                   <Pill tone={statusBadgeClass(order.data.status as OrderStatus)}>
                     {STATUS_LABEL_RU[order.data.status as OrderStatus] ?? order.data.status}
                   </Pill>
@@ -96,11 +98,12 @@ export function OrderDetailsPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex w-full flex-col gap-2 sm:max-w-md sm:flex-row sm:flex-wrap lg:justify-end">
                 {actions.map((a) => (
                   <Button
                     key={a.label}
                     variant={a.variant ?? 'primary'}
+                    className="w-full sm:w-auto sm:min-w-[10rem]"
                     disabled={setStatus.isPending}
                     onClick={() => setStatus.mutate({ orderId: id, status: a.next })}
                   >
@@ -116,14 +119,14 @@ export function OrderDetailsPage() {
               <div className="text-sm font-semibold">Состав заказа</div>
               <div className="mt-3 divide-y divide-neutral-200 dark:divide-white/10">
                 {order.data.items.map((i, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-3 text-sm">
+                  <div key={idx} className="flex flex-col gap-2 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div className="truncate font-medium">{i.title}</div>
                       <div className="mt-1 text-xs font-normal text-neutral-800 dark:text-neutral-300">
                         Размер: {i.size} • Кол-во: {i.qty}
                       </div>
                     </div>
-                    <div className="shrink-0 font-semibold">{i.priceTjs * i.qty} TJS</div>
+                    <div className="shrink-0 font-semibold sm:text-right">{i.priceTjs * i.qty} TJS</div>
                   </div>
                 ))}
               </div>

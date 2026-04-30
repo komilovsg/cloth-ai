@@ -59,21 +59,22 @@ export function SellersPage() {
 
       <Card className="p-4">
         <div className="text-sm font-semibold">Новый магазин</div>
-        <div className="mt-3 flex flex-wrap gap-3">
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-stretch">
           <input
             placeholder="Название"
             value={shopName}
             onChange={(e) => setShopName(e.target.value)}
-            className="min-w-[12rem] flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
+            className="w-full min-w-0 flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
           />
           <input
             placeholder="Slug (необязательно)"
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
-            className="w-44 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50 sm:w-44 sm:shrink-0"
           />
           <Button
             type="button"
+            className="w-full shrink-0 sm:w-auto sm:self-end"
             disabled={createSeller.isPending || !shopName.trim()}
             onClick={() =>
               createSeller.mutate(
@@ -98,7 +99,7 @@ export function SellersPage() {
       </Card>
 
       <Card className="overflow-hidden ring-1 ring-neutral-200 dark:ring-white/10">
-        <div className="max-w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] touch-pan-x">
+        <div className="hidden max-w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] touch-pan-x lg:block">
           <div className="min-w-[720px]">
             <div className="grid grid-cols-[1fr_120px_140px_200px] gap-0 border-b border-neutral-200 bg-white px-4 py-3 text-xs font-medium text-neutral-900 dark:border-white/10 dark:bg-neutral-950/60 dark:text-neutral-400">
               <div className="shrink-0">Магазин</div>
@@ -174,11 +175,79 @@ export function SellersPage() {
             </div>
           </div>
         </div>
+
+        <div className="divide-y divide-neutral-200 bg-white dark:divide-white/10 dark:bg-transparent lg:hidden">
+          {sellers.isLoading && (
+            <div className="px-4 py-8 text-center text-sm text-neutral-700 dark:text-neutral-300">Загрузка…</div>
+          )}
+          {sellers.isError && (
+            <div className="px-4 py-8 text-center text-sm text-neutral-900 dark:text-neutral-200">
+              Не удалось загрузить список
+            </div>
+          )}
+          {!sellers.isLoading &&
+            !sellers.isError &&
+            rows.map((r) => (
+              <div key={r.id} className="space-y-3 px-4 py-4">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{r.shopName || '—'}</div>
+                  <div className="mt-1 font-mono text-[11px] text-neutral-600 dark:text-neutral-400">{r.id}</div>
+                </div>
+                <div className="text-sm text-neutral-800 dark:text-neutral-200">
+                  Slug: <span className="font-medium">{r.slug ?? '—'}</span>
+                </div>
+                <div className="text-sm">Статус: {r.status}</div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    className="w-full text-sm"
+                    disabled={impersonate.isPending || r.status !== 'active'}
+                    onClick={() => impersonate.mutate(r.id)}
+                  >
+                    Войти как
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    className="w-full text-sm"
+                    onClick={() => {
+                      setModalSellerId(r.id)
+                      setAdminEmail('')
+                      setAdminPassword('')
+                    }}
+                  >
+                    + Админ
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    className="w-full text-sm"
+                    disabled={patchSeller.isPending}
+                    onClick={() =>
+                      patchSeller.mutate({
+                        sellerId: r.id,
+                        status: r.status === 'active' ? 'suspended' : 'active',
+                      })
+                    }
+                  >
+                    {r.status === 'active' ? 'Приостановить' : 'Включить'}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          {!sellers.isLoading && !sellers.isError && rows.length === 0 && (
+            <div className="px-4 py-8 text-center text-sm text-neutral-700 dark:text-neutral-300">
+              Пока нет магазинов — создайте первый блоком выше.
+            </div>
+          )}
+        </div>
         {(sellers.data?.total ?? 0) > 50 && (
-          <div className="flex justify-end gap-2 border-t border-neutral-200 px-4 py-3 dark:border-white/10">
+          <div className="flex flex-col gap-2 border-t border-neutral-200 px-4 py-3 sm:flex-row sm:justify-end dark:border-white/10">
             <Button
               variant="secondary"
               type="button"
+              className="w-full sm:w-auto"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
@@ -187,6 +256,7 @@ export function SellersPage() {
             <Button
               variant="secondary"
               type="button"
+              className="w-full sm:w-auto"
               disabled={page * 50 >= (sellers.data?.total ?? 0)}
               onClick={() => setPage((p) => p + 1)}
             >
@@ -222,12 +292,13 @@ export function SellersPage() {
                 {(createAdmin.error as Error)?.message ?? 'Ошибка'}
               </div>
             )}
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="secondary" type="button" onClick={() => setModalSellerId(null)}>
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
+              <Button variant="secondary" type="button" className="w-full sm:w-auto" onClick={() => setModalSellerId(null)}>
                 Отмена
               </Button>
               <Button
                 type="button"
+                className="w-full sm:w-auto"
                 disabled={createAdmin.isPending || adminPassword.length < 8 || !adminEmail.trim()}
                 onClick={() =>
                   createAdmin.mutate(

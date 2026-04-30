@@ -39,7 +39,7 @@ export function OverviewActivityChart({
 
   return (
     <Card className="p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
             Динамика по дням
@@ -49,13 +49,13 @@ export function OverviewActivityChart({
             Продажи — заказы со статусами оплаты и отгрузки. Резерв и отмены — по дате создания заказа.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
           {([7, 30, 90] as const).map((d) => (
             <Button
               key={d}
               type="button"
               variant={rangeDays === d ? 'primary' : 'secondary'}
-              className="text-xs"
+              className="w-full text-xs sm:w-auto"
               onClick={() => onRangeDays(d)}
             >
               {d} дн.

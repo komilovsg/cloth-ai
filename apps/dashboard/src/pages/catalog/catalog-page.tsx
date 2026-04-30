@@ -57,24 +57,24 @@ export function CatalogPage() {
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-xl font-semibold tracking-tight">Каталог</h1>
           <p className="mt-1 text-sm font-normal text-neutral-900 dark:text-neutral-400">
             Список товаров с яркими статусами. Категории фиксированы (верх / низ / платья) — свой набор
             категорий появится вместе с обновлением API.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link to="/catalog/new">
-            <Button>+ Добавить</Button>
+        <div className="flex w-full shrink-0 sm:w-auto">
+          <Link to="/catalog/new" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto">+ Добавить</Button>
           </Link>
         </div>
       </header>
 
       <Card className="p-4">
-        <div className="flex flex-wrap gap-3">
-          <div className="flex-1">
+        <div className="flex flex-col gap-3 md:flex-row md:flex-wrap">
+          <div className="min-w-0 flex-1">
             <label className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Поиск</label>
             <input
               value={q}
@@ -83,7 +83,7 @@ export function CatalogPage() {
               className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50 dark:placeholder:text-neutral-500"
             />
           </div>
-          <div className="w-56">
+          <div className="w-full md:w-56 md:shrink-0">
             <label className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Статус</label>
             <select
               value={status}
@@ -102,7 +102,7 @@ export function CatalogPage() {
       </Card>
 
       <Card className="overflow-hidden ring-1 ring-neutral-200 dark:ring-white/10">
-        <div className="max-w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] touch-pan-x">
+        <div className="hidden max-w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] touch-pan-x lg:block">
           <div className="min-w-[720px]">
             <div
               className={`${CATALOG_TABLE_GRID} border-b border-neutral-200 bg-white px-4 py-3 text-xs font-medium text-neutral-900 dark:border-white/10 dark:bg-neutral-950/60 dark:text-neutral-400`}
@@ -162,6 +162,50 @@ export function CatalogPage() {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="divide-y divide-neutral-200 bg-white dark:divide-white/10 dark:bg-transparent lg:hidden">
+          {catalog.isLoading && (
+            <div className="px-4 py-8 text-center text-sm font-normal text-neutral-900 dark:text-neutral-300">
+              Загружаем каталог…
+            </div>
+          )}
+          {catalog.isError && (
+            <div className="px-4 py-8 text-center text-sm font-normal text-neutral-900 dark:text-neutral-200">
+              Не удалось загрузить
+            </div>
+          )}
+          {!catalog.isLoading &&
+            !catalog.isError &&
+            rows.map((r) => (
+              <Link
+                key={r.id}
+                to={`/catalog/${r.id}/edit`}
+                className="block space-y-3 px-4 py-4 hover:bg-neutral-50 dark:hover:bg-neutral-950/40"
+              >
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-neutral-900 dark:text-neutral-50">{r.title}</div>
+                  <div className="mt-1 text-xs font-normal text-neutral-700 dark:text-neutral-400">{r.id}</div>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-sm text-neutral-900 dark:text-neutral-200">
+                    {CATEGORY_LABEL_RU[r.category] ?? r.category}
+                  </span>
+                  <span className="text-sm font-semibold">{r.priceTjs} TJS</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge status={r.status} />
+                  <span className="text-xs font-normal text-neutral-600 dark:text-neutral-400">
+                    {new Date(r.updatedAtIso).toLocaleString()}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          {!catalog.isLoading && !catalog.isError && rows.length === 0 && (
+            <div className="px-4 py-8 text-center text-sm font-normal text-neutral-900 dark:text-neutral-300">
+              Ничего не найдено.
+            </div>
+          )}
         </div>
       </Card>
     </div>
