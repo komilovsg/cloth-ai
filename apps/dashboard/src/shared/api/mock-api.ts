@@ -1,6 +1,7 @@
 import type { CatalogListResponse, GetOrderResponse, OrderStatus } from '@cloth-ai/contracts'
 import { MOCK_ORDERS } from '../../features/orders/mock-orders'
 import type {
+  AnalyticsTimeseriesDto,
   AuthMeDto,
   CatalogRowDto,
   OrderDetailsDto,
@@ -298,5 +299,24 @@ export async function endImpersonation(): Promise<void> {
     sellerId: null,
     impersonation: false,
   }
+}
+
+export async function fetchAnalyticsTimeseries(from: string, to: string): Promise<AnalyticsTimeseriesDto> {
+  await sleep(120)
+  const points: AnalyticsTimeseriesDto['points'] = []
+  const start = new Date(`${from}T12:00:00.000Z`)
+  const end = new Date(`${to}T12:00:00.000Z`)
+  for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+    const iso = d.toISOString().slice(0, 10)
+    const seed = iso.split('-').reduce((acc, x) => acc + Number.parseInt(x, 10), 0)
+    points.push({
+      date: iso,
+      publishedProducts: seed % 4,
+      soldOrders: seed % 5,
+      reservedOrders: seed % 3,
+      cancelledOrders: seed % 2,
+    })
+  }
+  return { points }
 }
 

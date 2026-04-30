@@ -4,6 +4,7 @@ import {
   createSeller,
   createSellerAdminUser,
   endImpersonation,
+  fetchAnalyticsTimeseries,
   fetchAuthMe,
   getCatalogRow,
   getDashboardApiMode,
@@ -112,6 +113,15 @@ export function useEndImpersonationMutation() {
   })
 }
 
+export function useAnalyticsTimeseriesQuery(from: string, to: string) {
+  return useQuery({
+    queryKey: ['analytics', 'timeseries', from, to],
+    queryFn: () => fetchAnalyticsTimeseries(from, to),
+    staleTime: 60_000,
+    enabled: dashboardQueriesEnabled(),
+  })
+}
+
 export function useOrdersQuery() {
   return useQuery({
     queryKey: queryKeys.orders(),
@@ -143,6 +153,7 @@ export function useSetOrderStatusMutation() {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.orders() })
       qc.invalidateQueries({ queryKey: queryKeys.orderSummaries() })
+      qc.invalidateQueries({ queryKey: ['analytics'] })
       qc.setQueryData(queryKeys.orderDetails(data.orderId), data)
     },
   })
@@ -176,6 +187,7 @@ export function useUpdateCatalogRowMutation() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.catalogRows() })
       qc.invalidateQueries({ queryKey: queryKeys.catalogRow(variables.id) })
+      qc.invalidateQueries({ queryKey: ['analytics'] })
     },
   })
 }

@@ -2,6 +2,8 @@ import type { CatalogListResponse, GetOrderResponse, OrderStatus } from '@cloth-
 import * as mock from './mock-api'
 import { setAdminToken } from '../../app/auth-gate'
 import type {
+  AnalyticsTimeseriesDto,
+  AnalyticsTimeseriesPointDto,
   AuthMeDto,
   CatalogRowDto,
   OrderDetailsDto,
@@ -223,6 +225,31 @@ export async function endImpersonation(): Promise<void> {
     method: 'POST',
   })
   setAdminToken(data.accessToken)
+}
+
+function normalizeAnalyticsPayload(raw: unknown): AnalyticsTimeseriesDto {
+  if (!raw || typeof raw !== 'object') return { points: [] }
+  const o = raw as Record<string, unknown>
+  const arr = o.points
+  if (!Array.isArray(arr)) return { points: [] }
+  const points: AnalyticsTimeseriesPointDto[] = arr.map((item) => {
+    const r = item as Record<string, unknown>
+    return {
+      date: String(r.date ?? ''),
+      publishedProducts: Number(r.publishedProducts ?? r.published_products ?? 0),
+      soldOrders: Number(r.soldOrders ?? r.sold_orders ?? 0),
+      reservedOrders: Number(r.reservedOrders ?? r.reserved_orders ?? 0),
+      cancelledOrders: Number(r.cancelledOrders ?? r.cancelled_orders ?? 0),
+    }
+  })
+  return { points }
+}
+
+export async function fetchAnalyticsTimeseries(from: string, to: string): Promise<AnalyticsTimeseriesDto> {
+  if (getApiMode() === 'mock') return mock.fetchAnalyticsTimeseries(from, to)
+  const qs = new URLSearchParams({ from, to })
+  const raw = await requestJson<unknown>(`/v1/admin/analytics/timeseries?${qs}`)
+  return normalizeAnalyticsPayload(raw)
 }
 
 export async function listOrders(): Promise<GetOrderResponse[]> {

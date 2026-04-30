@@ -1,6 +1,12 @@
+import { useMemo, useState } from 'react'
 import { Card } from '../../shared/ui/card'
-import { useOrdersQuery } from '../../shared/api/queries'
+import { useAnalyticsTimeseriesQuery, useOrdersQuery } from '../../shared/api/queries'
 import { LuBanknote, LuClock3, LuCoins, LuShoppingCart } from 'react-icons/lu'
+import { OverviewActivityChart } from './overview-activity-chart'
+
+function utcCalendarDayIso(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
 
 function Stat({
   label,
@@ -28,6 +34,17 @@ function Stat({
 
 export function OverviewPage() {
   const orders = useOrdersQuery()
+  const [rangeDays, setRangeDays] = useState<7 | 30 | 90>(7)
+
+  const { from, to } = useMemo(() => {
+    const end = new Date()
+    end.setUTCHours(0, 0, 0, 0)
+    const start = new Date(end)
+    start.setUTCDate(start.getUTCDate() - (rangeDays - 1))
+    return { from: utcCalendarDayIso(start), to: utcCalendarDayIso(end) }
+  }, [rangeDays])
+
+  const analytics = useAnalyticsTimeseriesQuery(from, to)
 
   const total = orders.data?.length ?? 0
   const paid = orders.data?.filter((o) => o.status === 'paid').length ?? 0
@@ -39,7 +56,7 @@ export function OverviewPage() {
       <header>
         <h1 className="text-xl font-semibold tracking-tight">Обзор</h1>
         <p className="mt-1 text-sm font-normal text-neutral-900 dark:text-neutral-400">
-          Заказы и активность магазина — быстрый снимок за сегодня.
+          Сводка по заказам и динамика по дням (опубликованные карточки, продажи, резервы, отмены).
         </p>
       </header>
 
@@ -69,6 +86,15 @@ export function OverviewPage() {
           icon={<LuBanknote className="h-6 w-6" />}
         />
       </div>
+
+      <OverviewActivityChart
+        points={analytics.data?.points ?? []}
+        rangeDays={rangeDays}
+        onRangeDays={setRangeDays}
+        isLoading={analytics.isLoading}
+        isError={analytics.isError}
+        onRetry={() => analytics.refetch()}
+      />
 
       <Card className="p-4">
         <div className="text-sm font-medium">Что дальше</div>

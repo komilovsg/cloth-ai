@@ -72,3 +72,15 @@ export interface SellerListDto {
   items: SellerSummaryDto[]
   total: number
 }
+
+export interface AnalyticsTimeseriesPointDto {
+  date: string
+  publishedProducts: number
+  soldOrders: number
+  reservedOrders: number
+  cancelledOrders: number
+}
+
+export interface AnalyticsTimeseriesDto {
+  points: AnalyticsTimeseriesPointDto[]
+}

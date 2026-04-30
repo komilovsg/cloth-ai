@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from './root-layout'
 import { RequireAdminAuth } from './auth-gate'
 import { OrdersPage } from '../pages/orders/orders-page'
@@ -7,7 +7,7 @@ import { CatalogPage } from '../pages/catalog/catalog-page'
 import { OverviewPage } from '../pages/overview/overview-page'
 import { CatalogWizardPage } from '../pages/catalog/catalog-wizard-page'
 import { LoginPage } from '../pages/login/login-page'
-import { ShopProfilePage } from '../pages/shop/shop-profile-page'
+import { ProfilePage } from '../pages/profile/profile-page'
 import { ForgotPasswordPage } from '../pages/auth/forgot-password-page'
 import { ResetPasswordPage } from '../pages/auth/reset-password-page'
 import { SellersPage } from '../pages/sellers/sellers-page'
@@ -30,7 +30,8 @@ export const router = createBrowserRouter([
       { path: 'catalog', element: <CatalogPage /> },
       { path: 'catalog/new', element: <CatalogWizardPage /> },
       { path: 'catalog/:itemId/edit', element: <CatalogWizardPage /> },
-      { path: 'shop', element: <ShopProfilePage /> },
+      { path: 'profile', element: <ProfilePage /> },
+      { path: 'shop', element: <Navigate to="/profile" replace /> },
       { path: 'sellers', element: <SellersPage /> },
     ],
   },
