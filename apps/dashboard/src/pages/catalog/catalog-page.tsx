@@ -88,7 +88,7 @@ export function CatalogPage() {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as 'all' | CatalogStatus)}
-              className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
+              className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-base leading-snug text-neutral-900 lg:py-2 lg:text-sm lg:leading-normal dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
             >
               <option value="all">Все</option>
             {(Object.keys(CATALOG_STATUS_RU) as CatalogStatus[]).map((key) => (

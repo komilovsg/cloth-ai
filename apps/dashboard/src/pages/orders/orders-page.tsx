@@ -66,7 +66,7 @@ export function OrdersPage() {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as 'all' | OrderStatus)}
-            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-base leading-snug text-neutral-900 lg:py-2 lg:text-sm lg:leading-normal dark:border-white/10 dark:bg-neutral-950 dark:text-neutral-50"
           >
             <option value="all">Все</option>
             {(Object.keys(STATUS_LABEL_RU) as OrderStatus[]).map((k) => (

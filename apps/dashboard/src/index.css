@@ -17,3 +17,21 @@ body {
   background: #0a0a0a;
   color: #fafafa;
 }
+
+/* Native selects: avoid iOS zoom on focus (<16px) and keep system picker chrome on WebKit */
+#root select {
+  appearance: auto;
+  -webkit-appearance: menulist-button;
+}
+
+.dark #root select {
+  color-scheme: dark;
+}
+
+@media (max-width: 1023px) {
+  #root select {
+    font-size: 1rem;
+    line-height: 1.375rem;
+    min-height: 2.75rem;
+  }
+}

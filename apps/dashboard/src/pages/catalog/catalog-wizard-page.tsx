@@ -304,7 +304,7 @@ export function CatalogWizardPage() {
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value as Category)}
-                      className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 ring-1 ring-neutral-200 dark:border-transparent dark:bg-neutral-950 dark:text-neutral-50 dark:ring-white/10"
+                      className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-3 text-base leading-snug text-neutral-900 ring-1 ring-neutral-200 lg:py-2 lg:text-sm lg:leading-normal dark:border-transparent dark:bg-neutral-950 dark:text-neutral-50 dark:ring-white/10"
                     >
                       <option value="tops">Топ</option>
                       <option value="bottoms">Низ</option>
