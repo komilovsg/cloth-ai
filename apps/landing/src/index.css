@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --fg: #fafafa;
+  --muted: #a3a3a3;
+  --violet: #8b5cf6;
+  --fuchsia: #c026d3;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Ubuntu,
+    Cantarell,
+    Noto Sans,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hero grid — lightweight CSS animation (no JS) */
+@keyframes grid-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-48px, -48px, 0);
+  }
+}
+
+.hero-grid-animate {
+  animation: grid-drift 48s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-grid-animate {
+    animation: none;
+  }
+}
