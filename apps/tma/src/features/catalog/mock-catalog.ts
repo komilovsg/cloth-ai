@@ -1,17 +1,20 @@
 import type { CatalogItemDto } from '@cloth-ai/contracts'
 
-/** Mirrors backend seed URLs (picsum) for mock API mode — stable CDN images. */
+const U = (id: string) =>
+  `https://images.unsplash.com/photo-${id}?w=720&h=960&fit=crop&q=80`
+
+/** Fashion-specific clothing images for demo mode. */
 export const MOCK_CATALOG: CatalogItemDto[] = [
   {
     id: 'p1',
     title: 'Топ спортивный — черный',
     category: 'tops',
     priceTjs: 199,
-    coverUrl: 'https://picsum.photos/id/428/720/960',
+    coverUrl: U('1571019613454-1cb2f99b2d8b'),
     modelImages: {
-      tall: 'https://picsum.photos/id/428/720/960',
-      mid: 'https://picsum.photos/id/429/720/960',
-      curvy: 'https://picsum.photos/id/431/720/960',
+      tall: U('1571019613454-1cb2f99b2d8b'),
+      mid: U('1552902865-b72c031ac5ea'),
+      curvy: U('1576566588028-4147f3842f27'),
     },
     sizes: [
       { size: 'XS', inStock: false },
@@ -26,11 +29,11 @@ export const MOCK_CATALOG: CatalogItemDto[] = [
     title: 'Легинсы — графит',
     category: 'bottoms',
     priceTjs: 249,
-    coverUrl: 'https://picsum.photos/id/338/720/960',
+    coverUrl: U('1558618666-fcd25c85cd64'),
     modelImages: {
-      tall: 'https://picsum.photos/id/338/720/960',
-      mid: 'https://picsum.photos/id/339/720/960',
-      curvy: 'https://picsum.photos/id/342/720/960',
+      tall: U('1558618666-fcd25c85cd64'),
+      mid: U('1542272604-787c3835535d'),
+      curvy: U('1506629082359-be9e19d5aabc'),
     },
     sizes: [
       { size: 'XS', inStock: true },
@@ -45,11 +48,11 @@ export const MOCK_CATALOG: CatalogItemDto[] = [
     title: 'Платье — синее',
     category: 'dresses',
     priceTjs: 399,
-    coverUrl: 'https://picsum.photos/id/325/720/960',
+    coverUrl: U('1539109136881-3be0616acf4b'),
     modelImages: {
-      tall: 'https://picsum.photos/id/325/720/960',
-      mid: 'https://picsum.photos/id/326/720/960',
-      curvy: 'https://picsum.photos/id/328/720/960',
+      tall: U('1539109136881-3be0616acf4b'),
+      mid: U('1515886657613-9f3515b0c78f'),
+      curvy: U('1490481651871-ab68de25d43d'),
     },
     sizes: [
       { size: 'XS', inStock: true },
@@ -64,11 +67,11 @@ export const MOCK_CATALOG: CatalogItemDto[] = [
     title: 'Худи оверсайз — серый меланж',
     category: 'tops',
     priceTjs: 279,
-    coverUrl: 'https://picsum.photos/id/631/720/960',
+    coverUrl: U('1556821840-3a63f15732ce'),
     modelImages: {
-      tall: 'https://picsum.photos/id/631/720/960',
-      mid: 'https://picsum.photos/id/668/720/960',
-      curvy: 'https://picsum.photos/id/669/720/960',
+      tall: U('1556821840-3a63f15732ce'),
+      mid: U('1509631179647-0177331693ae'),
+      curvy: U('1544441893-675173e5d5f8'),
     },
     sizes: [
       { size: 'XS', inStock: true },
@@ -83,11 +86,11 @@ export const MOCK_CATALOG: CatalogItemDto[] = [
     title: 'Джинсы прямые — индиго',
     category: 'bottoms',
     priceTjs: 329,
-    coverUrl: 'https://picsum.photos/id/535/720/960',
+    coverUrl: U('1542272604-787c3835535d'),
     modelImages: {
-      tall: 'https://picsum.photos/id/535/720/960',
-      mid: 'https://picsum.photos/id/536/720/960',
-      curvy: 'https://picsum.photos/id/538/720/960',
+      tall: U('1542272604-787c3835535d'),
+      mid: U('1558618666-fcd25c85cd64'),
+      curvy: U('1541099649105-4b4b8e6a8a48'),
     },
     sizes: [
       { size: 'XS', inStock: false },
@@ -102,11 +105,11 @@ export const MOCK_CATALOG: CatalogItemDto[] = [
     title: 'Кардиган трикотажный — беж',
     category: 'dresses',
     priceTjs: 359,
-    coverUrl: 'https://picsum.photos/id/821/720/960',
+    coverUrl: U('1611117775350-ac3950990985'),
     modelImages: {
-      tall: 'https://picsum.photos/id/821/720/960',
-      mid: 'https://picsum.photos/id/821/720/960',
-      curvy: 'https://picsum.photos/id/821/720/960',
+      tall: U('1611117775350-ac3950990985'),
+      mid: U('1585487000160-6e568bde7786'),
+      curvy: U('1596755095775-29c9f0e5e5de'),
     },
     sizes: [
       { size: 'XS', inStock: true },

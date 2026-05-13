@@ -5,7 +5,7 @@ import { useTelegram } from '../features/telegram/use-telegram'
 import { IconButton } from '../shared/ui/icon-button'
 import { LuArrowLeft, LuMenu, LuShoppingBag } from 'react-icons/lu'
 import { usePrefsStore } from '../features/preferences/prefs-store'
-import { useMenuDrawer } from './menu-drawer'
+import { useMenuDrawer, MenuDrawerSheet } from './menu-drawer'
 
 export function RootLayout() {
   const navigate = useNavigate()
@@ -100,6 +100,8 @@ export function RootLayout() {
         )}
         <Outlet />
       </main>
+
+      <MenuDrawerSheet />
 
       {showCartFab && (
         <div className="fixed bottom-5 right-5 z-20">
