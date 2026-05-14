@@ -73,6 +73,7 @@ export function CatalogWizardPage() {
   const rowId = itemId ?? workingId ?? ''
   const rowQuery = useCatalogRowQuery(rowId, { pollWhileGenerating: true })
   const fileRef = useRef<HTMLInputElement>(null)
+  const alreadyTriggeredRef = useRef<string | null>(null)
 
   const [step, setStep] = useState<Step>(1)
   const [title, setTitle] = useState('')
@@ -88,11 +89,37 @@ export function CatalogWizardPage() {
 
   const photoPreviewUrl = rowQuery.data?.coverUrl || rowQuery.data?.sourceImageUrl
 
+  // Auto-trigger AI generation when arriving at step 2 with photo + valid title/price
   useEffect(() => {
-    if (uploadBanner?.kind !== 'success') return
-    const t = window.setTimeout(() => setUploadBanner(null), 4500)
-    return () => window.clearTimeout(t)
-  }, [uploadBanner])
+    if (step !== 2) return
+    if (!workingId) return
+    if (alreadyTriggeredRef.current === workingId) return
+    if (!rowQuery.data?.sourceImageUrl) return
+    if (!canContinue1) return
+    if (rowQuery.data?.status !== 'draft') return
+
+    alreadyTriggeredRef.current = workingId
+    void (async () => {
+      setIsGenerating(true)
+      try {
+        await updateCatalogRow({ id: workingId, title: title.trim(), priceTjs, category })
+        await triggerAiGeneration(workingId)
+        await rowQuery.refetch()
+      } catch (err) {
+        alreadyTriggeredRef.current = null
+        showToast(err instanceof Error ? err.message : 'Ошибка запуска генерации')
+      } finally {
+        setIsGenerating(false)
+      }
+    })()
+  }, [step, workingId, rowQuery.data?.sourceImageUrl, rowQuery.data?.status, canContinue1, title, priceTjs, category, showToast])
+
+  // Auto-advance to step 3 when generation completes
+  useEffect(() => {
+    if (step === 2 && rowQuery.data?.status === 'generated') {
+      setStep(3)
+    }
+  }, [step, rowQuery.data?.status])
 
   const tiles = useMemo(() => {
     const row = rowQuery.data
@@ -145,10 +172,8 @@ export function CatalogWizardPage() {
             }
             await uploadCatalogPhoto(id, file)
             await rowQuery.refetch()
-            setUploadBanner({
-              kind: 'success',
-              message: `Файл «${file.name}» загружен.`,
-            })
+            showToast(`Фото «${file.name}» загружено`)
+            setStep(2)
           } catch (err) {
             const message = err instanceof Error ? err.message : 'Ошибка загрузки'
             setUploadBanner({ kind: 'error', message })
@@ -335,13 +360,18 @@ export function CatalogWizardPage() {
               <div className="mt-3 rounded-xl bg-neutral-50 p-3 text-xs leading-relaxed text-neutral-900 ring-1 ring-neutral-200 dark:bg-neutral-950/40 dark:text-neutral-300 dark:ring-white/10">
                 Ниже четыре превью:{' '}
                 <span className="font-medium text-neutral-950 dark:text-neutral-100">исходное фото</span> и три
-                типажа (высокий / средний / плотный). Нажмите «Запустить» и дождитесь статуса
-                генерации — затем откройте шаг «Публикация».
+                типажа (высокий / средний / плотный). Генерация запускается автоматически после загрузки фото —
+                дождитесь статуса, затем шаг «Публикация».
               </div>
+              {!canContinue1 && rowQuery.data?.sourceImageUrl && (
+                <div className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-500/35">
+                  Вернитесь на шаг 1 и заполните название товара — тогда генерация запустится автоматически.
+                </div>
+              )}
             </div>
             <Button
               className="w-full shrink-0 sm:w-auto sm:self-start"
-              disabled={isGenerating}
+              disabled={isGenerating || rowQuery.data?.status === 'generating'}
               onClick={async () => {
                 setIsGenerating(true)
                 let id = workingId
