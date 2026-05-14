@@ -84,10 +84,11 @@ export function CatalogWizardPage() {
   const [uploadBanner, setUploadBanner] = useState<
     null | { kind: 'success' | 'error'; message: string }
   >(null)
+  const [localPreview, setLocalPreview] = useState<string | null>(null)
 
   const canContinue1 = title.trim().length > 2 && priceTjs > 0
 
-  const photoPreviewUrl = rowQuery.data?.coverUrl || rowQuery.data?.sourceImageUrl
+  const photoPreviewUrl = localPreview || rowQuery.data?.coverUrl || rowQuery.data?.sourceImageUrl
 
   // Auto-trigger AI generation when arriving at step 2 with photo + valid title/price
   useEffect(() => {
@@ -114,12 +115,12 @@ export function CatalogWizardPage() {
     })()
   }, [step, workingId, rowQuery.data?.sourceImageUrl, rowQuery.data?.status, canContinue1, title, priceTjs, category, showToast])
 
-  // Auto-advance to step 3 when generation completes
+  // Auto-advance to step 3 only when WE triggered generation in this session
   useEffect(() => {
-    if (step === 2 && rowQuery.data?.status === 'generated') {
+    if (step === 2 && rowQuery.data?.status === 'generated' && alreadyTriggeredRef.current === workingId) {
       setStep(3)
     }
-  }, [step, rowQuery.data?.status])
+  }, [step, rowQuery.data?.status, workingId])
 
   const tiles = useMemo(() => {
     const row = rowQuery.data
@@ -163,6 +164,8 @@ export function CatalogWizardPage() {
           if (!file) return
           setUploadBanner(null)
           setIsUploadingPhoto(true)
+          const objectUrl = URL.createObjectURL(file)
+          setLocalPreview(objectUrl)
           try {
             let id = workingId
             if (!id) {
@@ -172,6 +175,8 @@ export function CatalogWizardPage() {
             }
             await uploadCatalogPhoto(id, file)
             await rowQuery.refetch()
+            URL.revokeObjectURL(objectUrl)
+            setLocalPreview(null)
             showToast(`Фото «${file.name}» загружено`)
             setStep(2)
           } catch (err) {
@@ -426,33 +431,37 @@ export function CatalogWizardPage() {
           )}
 
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {(['original', 'tall', 'mid', 'curvy'] as const).map((k) => (
-              <div
-                key={k}
-                className={[
-                  'h-28 w-full overflow-hidden rounded-xl ring-1 ring-neutral-200 sm:h-32 md:h-36 dark:ring-white/10',
-                  isGenerating || rowQuery.data?.status === 'generating'
-                    ? 'animate-pulse bg-neutral-200 dark:bg-neutral-900'
-                    : 'bg-neutral-100 dark:bg-neutral-950/60',
-                ].join(' ')}
-              >
-                {!isGenerating && rowQuery.data?.status !== 'generating' && (
-                  <img
-                    src={tiles[k]}
-                    alt={
-                      k === 'original'
-                        ? 'Оригинал'
-                        : k === 'tall'
-                          ? 'Типаж высокий'
-                          : k === 'mid'
-                            ? 'Типаж средний'
-                            : 'Типаж плотный'
-                    }
-                    className="h-full w-full object-cover"
-                  />
-                )}
-              </div>
-            ))}
+            {(['original', 'tall', 'mid', 'curvy'] as const).map((k) => {
+              const isGeneratingState = isGenerating || rowQuery.data?.status === 'generating'
+              const showImage = k === 'original' || !isGeneratingState
+              return (
+                <div
+                  key={k}
+                  className={[
+                    'h-28 w-full overflow-hidden rounded-xl ring-1 ring-neutral-200 sm:h-32 md:h-36 dark:ring-white/10',
+                    isGeneratingState && k !== 'original'
+                      ? 'animate-pulse bg-neutral-200 dark:bg-neutral-900'
+                      : 'bg-neutral-100 dark:bg-neutral-950/60',
+                  ].join(' ')}
+                >
+                  {showImage && (
+                    <img
+                      src={tiles[k]}
+                      alt={
+                        k === 'original'
+                          ? 'Оригинал'
+                          : k === 'tall'
+                            ? 'Типаж высокий'
+                            : k === 'mid'
+                              ? 'Типаж средний'
+                              : 'Типаж плотный'
+                      }
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                </div>
+              )
+            })}
           </div>
 
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
