@@ -330,6 +330,7 @@ export async function updateCatalogRow(input: {
   title: string
   priceTjs: number
   category: string
+  gender: string
 }): Promise<CatalogRowDto> {
   if (getApiMode() === 'mock') return mock.updateCatalogRow(input)
   return requestJson<CatalogRowDto>(`/v1/catalog/items/${encodeURIComponent(input.id)}`, {

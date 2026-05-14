@@ -75,10 +75,13 @@ export function CatalogWizardPage() {
   const fileRef = useRef<HTMLInputElement>(null)
   const alreadyTriggeredRef = useRef<string | null>(null)
 
+  type Gender = 'female' | 'male'
+
   const [step, setStep] = useState<Step>(1)
   const [title, setTitle] = useState('')
   const [priceTjs, setPriceTjs] = useState<number>(199)
   const [category, setCategory] = useState<Category>('tops')
+  const [gender, setGender] = useState<Gender>('female')
   const [isGenerating, setIsGenerating] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [uploadBanner, setUploadBanner] = useState<
@@ -103,7 +106,7 @@ export function CatalogWizardPage() {
     void (async () => {
       setIsGenerating(true)
       try {
-        await updateCatalogRow({ id: workingId, title: title.trim(), priceTjs, category })
+        await updateCatalogRow({ id: workingId, title: title.trim(), priceTjs, category, gender })
         await triggerAiGeneration(workingId)
         await rowQuery.refetch()
       } catch (err) {
@@ -149,6 +152,7 @@ export function CatalogWizardPage() {
     setTitle(rowQuery.data.title)
     setPriceTjs(rowQuery.data.priceTjs)
     setCategory(rowQuery.data.category as Category)
+    setGender((rowQuery.data.gender as Gender) || 'female')
   }, [isEdit, rowQuery.data])
 
   return (
@@ -340,6 +344,26 @@ export function CatalogWizardPage() {
                       <option value="bottoms">Низ</option>
                       <option value="dresses">Платья</option>
                     </select>
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Пол модели</label>
+                  <div className="flex gap-2">
+                    {(['female', 'male'] as const).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setGender(g)}
+                        className={[
+                          'flex-1 rounded-xl px-3 py-2 text-sm font-medium ring-1 transition-colors',
+                          gender === g
+                            ? 'bg-violet-600 text-white ring-violet-500 dark:bg-violet-500 dark:ring-violet-400'
+                            : 'bg-white text-neutral-900 ring-neutral-200 hover:bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 dark:ring-white/10 dark:hover:bg-neutral-900',
+                        ].join(' ')}
+                      >
+                        {g === 'female' ? '♀ Женский' : '♂ Мужской'}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>

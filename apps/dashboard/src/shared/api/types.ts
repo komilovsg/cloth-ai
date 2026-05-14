@@ -37,6 +37,7 @@ export interface CatalogRowDto {
   id: string
   title: string
   category: string
+  gender: string
   priceTjs: number
   status: CatalogStatus
   updatedAtIso: string

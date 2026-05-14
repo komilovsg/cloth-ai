@@ -106,6 +106,7 @@ export async function createCatalogItemDraft(): Promise<{ id: string }> {
     id,
     title: 'Новый товар',
     category: 'tops',
+    gender: 'female',
     priceTjs: 199,
     status: 'draft',
     updatedAtIso: now,
@@ -121,6 +122,7 @@ export async function listCatalogRows(): Promise<CatalogRowDto[]> {
       id: 'c-1',
       title: 'Топ спортивный — черный',
       category: 'tops',
+      gender: 'female',
       priceTjs: 199,
       status: 'published',
       updatedAtIso: now,
@@ -129,6 +131,7 @@ export async function listCatalogRows(): Promise<CatalogRowDto[]> {
       id: 'c-2',
       title: 'Легинсы — графит',
       category: 'bottoms',
+      gender: 'female',
       priceTjs: 249,
       status: 'generated',
       updatedAtIso: now,
@@ -144,6 +147,7 @@ export async function updateCatalogRow(input: {
   title: string
   priceTjs: number
   category: string
+  gender: string
 }): Promise<CatalogRowDto> {
   await sleep(250)
   const row = catalogStore.get(input.id)
@@ -153,6 +157,7 @@ export async function updateCatalogRow(input: {
     title: input.title,
     priceTjs: input.priceTjs,
     category: input.category,
+    gender: input.gender,
     updatedAtIso: new Date().toISOString(),
   }
   catalogStore.set(input.id, next)
