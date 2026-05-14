@@ -20,8 +20,8 @@ export function Footer() {
             href={TELEGRAM_BOT_URL}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-full items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium text-white ring-1 transition hover:opacity-90 sm:w-auto"
-            style={{ background: 'var(--accent)', ringColor: 'var(--accent-ring)' }}
+            className="inline-flex w-full items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90 sm:w-auto"
+            style={{ background: 'var(--accent)', outline: '1px solid var(--accent-ring)' }}
           >
             {t.footer.cta1}
           </a>

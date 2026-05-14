@@ -415,6 +415,7 @@ export function CatalogWizardPage() {
                     title: title.trim(),
                     priceTjs,
                     category,
+                    gender,
                   })
                   await triggerAiGeneration(id)
                   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))

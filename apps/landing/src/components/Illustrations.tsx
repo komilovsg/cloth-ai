@@ -227,9 +227,9 @@ export function IllustrCatalogWizard(props: SvgProps) {
 /** Browser frame mock — Admin orders CRM */
 export function IllustrOrders(props: SvgProps) {
   const statuses = [
-    { label: 'Зарезервирован', fill: '#854d0e', stroke: '#ca8a04', dot: '#facc15', name: 'Платье синее', id: '#1042', total: '399 с.' },
-    { label: 'Подтверждён', fill: '#14532d', stroke: '#16a34a', dot: '#4ade80', name: 'Топ чёрный + Легинсы', id: '#1041', total: '448 с.' },
-    { label: 'Отменён', fill: '#450a0a', stroke: '#dc2626', dot: '#f87171', name: 'Платье бежевое', id: '#1040', total: '349 с.' },
+    { label: 'Зарезервирован', fill: '#854d0e', stroke: '#ca8a04', dot: '#facc15', id: '#1042', total: '399 с.' },
+    { label: 'Подтверждён', fill: '#14532d', stroke: '#16a34a', dot: '#4ade80', id: '#1041', total: '448 с.' },
+    { label: 'Отменён', fill: '#450a0a', stroke: '#dc2626', dot: '#f87171', id: '#1040', total: '349 с.' },
   ]
 
   return (
@@ -279,7 +279,7 @@ export function IllustrOrders(props: SvgProps) {
       ))}
 
       {/* Table rows */}
-      {statuses.map(({ label, fill, stroke, dot, name, id, total }, i) => (
+      {statuses.map(({ label, fill, stroke, dot, id, total }, i) => (
         <g key={label}>
           <rect x="56" y={116 + i * 60} width="504" height="60" fill={i % 2 === 0 ? '#0f172a' : '#0a1628'} />
           <rect x="56" y={116 + i * 60 + 59} width="504" height="1" fill="#1e293b" />
