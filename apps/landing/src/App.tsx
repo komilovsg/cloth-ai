@@ -6,6 +6,7 @@ import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { FadeSection } from './components/Section'
+import { ShimmerButton } from './components/ShimmerButton'
 
 function MidCta() {
   const { t } = useI18n()
@@ -28,22 +29,22 @@ function MidCta() {
             {c.body}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <a
+            <ShimmerButton
               href={TELEGRAM_BOT_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-xl px-8 py-3 text-base font-medium text-white transition hover:opacity-90 sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-xl px-8 py-3 text-base font-medium text-white sm:w-auto"
               style={{ background: 'var(--accent)', boxShadow: 'var(--shadow-accent)', outline: '1px solid var(--accent-ring)' }}
             >
               {c.cta1}
-            </a>
-            <a
+            </ShimmerButton>
+            <ShimmerButton
               href={DASHBOARD_URL}
-              className="inline-flex w-full items-center justify-center rounded-xl border px-8 py-3 text-base font-medium transition hover:opacity-70 sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-xl border px-8 py-3 text-base font-medium sm:w-auto"
               style={{ borderColor: 'var(--border)', color: 'var(--fg)' }}
             >
               {c.cta2}
-            </a>
+            </ShimmerButton>
           </div>
         </div>
       </div>

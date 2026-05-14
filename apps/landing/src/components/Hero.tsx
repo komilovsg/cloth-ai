@@ -3,6 +3,7 @@ import { DASHBOARD_URL, TELEGRAM_BOT_URL } from '../constants/public-links'
 import { useI18n } from '../context/I18nContext'
 import { HeroHangerDecoration } from './HeroHangerDecoration'
 import { HeroSpotlight } from './HeroSpotlight'
+import { ShimmerButton } from './ShimmerButton'
 
 export function Hero() {
   const reduce = useReducedMotion()
@@ -64,22 +65,22 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.15 }}
             >
-              <a
+              <ShimmerButton
                 href={TELEGRAM_BOT_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-center text-base font-medium text-white transition hover:opacity-90"
+                className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-center text-base font-medium text-white"
                 style={{ background: 'var(--accent)', boxShadow: 'var(--shadow-accent)', outline: '1px solid var(--accent-ring)' }}
               >
                 {h.cta1}
-              </a>
-              <a
+              </ShimmerButton>
+              <ShimmerButton
                 href={DASHBOARD_URL}
-                className="inline-flex items-center justify-center rounded-xl border px-6 py-3 text-center text-base font-medium transition hover:opacity-80"
-                style={{ borderColor: 'var(--border)', color: 'var(--fg)', background: 'rgba(255,255,255,0.03)' }}
+                className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-center text-base font-medium"
+                style={{ color: 'var(--fg)', background: 'rgba(255,255,255,0.03)' }}
               >
                 {h.cta2}
-              </a>
+              </ShimmerButton>
             </motion.div>
           </div>
 
