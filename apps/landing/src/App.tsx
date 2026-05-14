@@ -1,35 +1,48 @@
+import { DASHBOARD_URL, TELEGRAM_BOT_URL } from './constants/public-links'
+import { I18nProvider, useI18n } from './context/I18nContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { Features } from './components/Features'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
-import { DASHBOARD_URL, TELEGRAM_BOT_URL } from './constants/public-links'
 import { FadeSection } from './components/Section'
 
 function MidCta() {
+  const { t } = useI18n()
+  const c = t.midCta
+
   return (
-    <FadeSection className="border-b border-white/5 py-16 sm:py-20">
+    <FadeSection className="border-b py-16 sm:py-20" style={{ borderColor: 'var(--border)' }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="rounded-2xl border border-violet-500/25 bg-gradient-to-br from-violet-950/50 to-[#0a0a0a] px-6 py-10 text-center sm:px-10">
-          <h2 className="text-xl font-semibold text-neutral-50 sm:text-2xl">
-            Готовы показать коллекцию клиентам в Telegram?
+        <div
+          className="rounded-2xl border px-6 py-10 text-center sm:px-10"
+          style={{
+            borderColor: 'rgba(59,130,246,0.2)',
+            background: 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, var(--bg) 100%)',
+          }}
+        >
+          <h2 className="text-xl font-semibold sm:text-2xl" style={{ color: 'var(--fg)' }}>
+            {c.title}
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-neutral-400">
-            Подключите бота и админку — ссылки на них заданы в коде лендинга и попадают в сборку без отдельного .env.
+          <p className="mx-auto mt-3 max-w-xl" style={{ color: 'var(--muted)' }}>
+            {c.body}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
               href={TELEGRAM_BOT_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-xl bg-violet-600 px-8 py-3 text-base font-medium text-white shadow-lg shadow-violet-900/25 ring-1 ring-violet-400/45 transition hover:bg-violet-500 sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-xl px-8 py-3 text-base font-medium text-white transition hover:opacity-90 sm:w-auto"
+              style={{ background: 'var(--accent)', boxShadow: 'var(--shadow-accent)', outline: '1px solid var(--accent-ring)' }}
             >
-              Открыть в Telegram
+              {c.cta1}
             </a>
             <a
               href={DASHBOARD_URL}
-              className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 px-8 py-3 text-base font-medium text-neutral-200 transition hover:bg-white/5 sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-xl border px-8 py-3 text-base font-medium transition hover:opacity-70 sm:w-auto"
+              style={{ borderColor: 'var(--border)', color: 'var(--fg)' }}
             >
-              Админка продавца
+              {c.cta2}
             </a>
           </div>
         </div>
@@ -38,7 +51,7 @@ function MidCta() {
   )
 }
 
-export default function App() {
+function AppInner() {
   return (
     <div id="top" className="min-h-full">
       <Header />
@@ -49,5 +62,15 @@ export default function App() {
       </main>
       <Footer />
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <I18nProvider>
+        <AppInner />
+      </I18nProvider>
+    </ThemeProvider>
   )
 }

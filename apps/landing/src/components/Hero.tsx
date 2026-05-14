@@ -1,19 +1,22 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { DASHBOARD_URL, TELEGRAM_BOT_URL } from '../constants/public-links'
+import { useI18n } from '../context/I18nContext'
 import { HeroHangerDecoration } from './HeroHangerDecoration'
 import { HeroSpotlight } from './HeroSpotlight'
 
 export function Hero() {
   const reduce = useReducedMotion()
+  const { t } = useI18n()
+  const h = t.hero
 
   return (
-    <section className="relative overflow-hidden border-b border-white/5">
+    <section className="relative overflow-hidden border-b" style={{ borderColor: 'var(--border)' }}>
       <div
-        className="hero-grid-animate pointer-events-none absolute -inset-[100%] opacity-[0.07]"
+        className="hero-grid-animate pointer-events-none absolute -inset-[100%] opacity-[0.06]"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)
+            linear-gradient(rgba(59,130,246,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59,130,246,0.08) 1px, transparent 1px)
           `,
           backgroundSize: '48px 48px',
         }}
@@ -25,32 +28,34 @@ export function Hero() {
         <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,420px)] lg:items-center lg:gap-10 xl:gap-14">
           <div className="min-w-0">
             <motion.p
-              className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-neutral-400 sm:text-sm"
+              className="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs sm:text-sm"
+              style={{ borderColor: 'var(--border)', background: 'rgba(59,130,246,0.06)', color: 'var(--muted)' }}
               initial={reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
-              Платформа для магазинов одежды и цехов
+              {h.badge}
             </motion.p>
 
             <motion.h1
-              className="max-w-3xl text-balance text-3xl font-semibold tracking-tight text-neutral-50 sm:text-5xl sm:leading-[1.08] lg:text-6xl"
+              className="max-w-3xl text-balance text-3xl font-semibold tracking-tight sm:text-5xl sm:leading-[1.08] lg:text-6xl"
+              style={{ color: 'var(--fg)' }}
               initial={reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.05 }}
             >
-              Ваш магазин на&nbsp;автопилоте: от&nbsp;фото на телефоне до продажи в&nbsp;Telegram за&nbsp;минуты.
+              {h.title}
             </motion.h1>
 
             <motion.p
-              className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-400 sm:text-lg"
+              className="mt-5 max-w-2xl text-pretty text-base leading-relaxed sm:text-lg"
+              style={{ color: 'var(--muted)' }}
               initial={reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.1 }}
             >
-              CLOTH.AI превращает снимки товара в профессиональную витрину с примеркой на типажах и оплатой внутри бота —
-              а заказы и статусы вы видите в своей CRM в браузере.
+              {h.subtitle}
             </motion.p>
 
             <motion.div
@@ -63,15 +68,17 @@ export function Hero() {
                 href={TELEGRAM_BOT_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-xl bg-violet-600 px-6 py-3 text-center text-base font-medium text-white shadow-lg shadow-violet-900/30 ring-1 ring-violet-400/50 transition hover:bg-violet-500"
+                className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-center text-base font-medium text-white transition hover:opacity-90"
+                style={{ background: 'var(--accent)', boxShadow: 'var(--shadow-accent)', outline: '1px solid var(--accent-ring)' }}
               >
-                Открыть в Telegram
+                {h.cta1}
               </a>
               <a
                 href={DASHBOARD_URL}
-                className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-6 py-3 text-center text-base font-medium text-neutral-100 transition hover:bg-white/[0.08]"
+                className="inline-flex items-center justify-center rounded-xl border px-6 py-3 text-center text-base font-medium transition hover:opacity-80"
+                style={{ borderColor: 'var(--border)', color: 'var(--fg)', background: 'rgba(255,255,255,0.03)' }}
               >
-                Войти в админку
+                {h.cta2}
               </a>
             </motion.div>
           </div>
@@ -79,22 +86,17 @@ export function Hero() {
           <HeroHangerDecoration />
         </div>
 
-        <dl className="mt-14 grid gap-6 border-t border-white/10 pt-10 sm:grid-cols-3">
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-neutral-500">Скорость</dt>
-            <dd className="mt-1 text-2xl font-semibold tabular-nums text-neutral-100 sm:text-3xl">Минуты</dd>
-            <dd className="mt-1 text-sm text-neutral-500">Контент и карточки без студии</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-neutral-500">Канал</dt>
-            <dd className="mt-1 text-2xl font-semibold text-neutral-100 sm:text-3xl">Telegram</dd>
-            <dd className="mt-1 text-sm text-neutral-500">Оплата и статус заказа в боте</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-neutral-500">Контроль</dt>
-            <dd className="mt-1 text-2xl font-semibold text-neutral-100 sm:text-3xl">CRM</dd>
-            <dd className="mt-1 text-sm text-neutral-500">Заказы и каталог в одном месте</dd>
-          </div>
+        <dl
+          className="mt-14 grid gap-6 border-t pt-10 sm:grid-cols-3"
+          style={{ borderColor: 'var(--border)' }}
+        >
+          {([h.stat1, h.stat2, h.stat3] as const).map((s) => (
+            <div key={s.label}>
+              <dt className="text-xs uppercase tracking-wider" style={{ color: 'var(--muted)' }}>{s.label}</dt>
+              <dd className="mt-1 text-2xl font-semibold tabular-nums sm:text-3xl" style={{ color: 'var(--fg)' }}>{s.value}</dd>
+              <dd className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>{s.desc}</dd>
+            </div>
+          ))}
         </dl>
       </div>
     </section>
