@@ -13,6 +13,7 @@ import {
   LuPlus,
   LuSun,
   LuUsers,
+  LuWandSparkles,
   LuX,
 } from 'react-icons/lu'
 import { useToastStore } from '../shared/toast-store'
@@ -214,6 +215,14 @@ export function RootLayout() {
           onNavigate={closeMobile}
         />
       )}
+      <SidebarLink
+        to="/dev/hf-image"
+        label="HF: тест картинки"
+        icon={<LuWandSparkles className="h-5 w-5" />}
+        collapsed={navCollapsed}
+        light={light}
+        onNavigate={closeMobile}
+      />
     </>
   )
 

@@ -16,6 +16,20 @@ import { useToastStore } from '../../shared/toast-store'
 
 type Step = 1 | 2 | 3
 type Category = 'tops' | 'bottoms' | 'dresses'
+type Gender = 'female' | 'male'
+type ModelType = 'tall' | 'mid' | 'curvy'
+type AiProvider = 'openai' | 'huggingface'
+
+const MODEL_TYPE_LABELS: Record<ModelType, string> = {
+  tall: 'Высокий / стройный',
+  mid: 'Средний / атлетичный',
+  curvy: 'Плотный / plus-size',
+}
+
+const AI_PROVIDER_LABELS: Record<AiProvider, string> = {
+  openai: 'DALL·E 3',
+  huggingface: 'HuggingFace',
+}
 
 function StepPill({
   step,
@@ -55,13 +69,16 @@ function StepPill({
   )
 }
 
+function svgDataUrl(label: string): string {
+  const esc = label.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect fill="#e7e5e4" width="400" height="500"/><text x="200" y="250" text-anchor="middle" dominant-baseline="middle" fill="#57534e" font-family="system-ui,sans-serif" font-size="15">${esc}</text></svg>`,
+  )}`
+}
+
 const FALLBACK = {
-  original:
-    'https://images.unsplash.com/photo-1520975916090-3105956dac38?auto=format&fit=crop&w=900&q=60',
-  tall: 'https://images.unsplash.com/photo-1520975732137-0462f16d0d86?auto=format&fit=crop&w=900&q=60',
-  mid: 'https://images.unsplash.com/photo-1520975693413-35e3c3c94762?auto=format&fit=crop&w=900&q=60',
-  curvy:
-    'https://images.unsplash.com/photo-1520975687797-1b3f2a444ef1?auto=format&fit=crop&w=900&q=60',
+  original: svgDataUrl('Фото товара'),
+  generated: svgDataUrl('Результат генерации'),
 }
 
 export function CatalogWizardPage() {
@@ -75,13 +92,14 @@ export function CatalogWizardPage() {
   const fileRef = useRef<HTMLInputElement>(null)
   const alreadyTriggeredRef = useRef<string | null>(null)
 
-  type Gender = 'female' | 'male'
-
   const [step, setStep] = useState<Step>(1)
   const [title, setTitle] = useState('')
   const [priceTjs, setPriceTjs] = useState<number>(199)
   const [category, setCategory] = useState<Category>('tops')
   const [gender, setGender] = useState<Gender>('female')
+  const [modelType, setModelType] = useState<ModelType>('mid')
+  const [aiProvider, setAiProvider] = useState<AiProvider>('openai')
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [uploadBanner, setUploadBanner] = useState<
@@ -93,32 +111,7 @@ export function CatalogWizardPage() {
 
   const photoPreviewUrl = localPreview || rowQuery.data?.coverUrl || rowQuery.data?.sourceImageUrl
 
-  // Auto-trigger AI generation when arriving at step 2 with photo + valid title/price
-  useEffect(() => {
-    if (step !== 2) return
-    if (!workingId) return
-    if (alreadyTriggeredRef.current === workingId) return
-    if (!rowQuery.data?.sourceImageUrl) return
-    if (!canContinue1) return
-    if (rowQuery.data?.status !== 'draft') return
-
-    alreadyTriggeredRef.current = workingId
-    void (async () => {
-      setIsGenerating(true)
-      try {
-        await updateCatalogRow({ id: workingId, title: title.trim(), priceTjs, category, gender })
-        await triggerAiGeneration(workingId)
-        await rowQuery.refetch()
-      } catch (err) {
-        alreadyTriggeredRef.current = null
-        showToast(err instanceof Error ? err.message : 'Ошибка запуска генерации')
-      } finally {
-        setIsGenerating(false)
-      }
-    })()
-  }, [step, workingId, rowQuery.data?.sourceImageUrl, rowQuery.data?.status, canContinue1, title, priceTjs, category, showToast])
-
-  // Auto-advance to step 3 only when WE triggered generation in this session
+  // Auto-advance to step 3 when generation completes
   useEffect(() => {
     if (step === 2 && rowQuery.data?.status === 'generated' && alreadyTriggeredRef.current === workingId) {
       setStep(3)
@@ -127,22 +120,12 @@ export function CatalogWizardPage() {
 
   const tiles = useMemo(() => {
     const row = rowQuery.data
-    if (!row) {
-      return {
-        original: FALLBACK.original,
-        tall: FALLBACK.tall,
-        mid: FALLBACK.mid,
-        curvy: FALLBACK.curvy,
-      }
-    }
+    if (!row) return { original: FALLBACK.original, generated: FALLBACK.generated }
     const orig = row.sourceImageUrl || row.coverUrl || FALLBACK.original
     const mi = row.modelImages || {}
-    return {
-      original: orig,
-      tall: mi.tall || FALLBACK.tall,
-      mid: mi.mid || FALLBACK.mid,
-      curvy: mi.curvy || FALLBACK.curvy,
-    }
+    const genKey = row.modelType || 'mid'
+    const gen = mi[genKey] || mi.mid || mi.tall || mi.curvy || FALLBACK.generated
+    return { original: orig, generated: gen }
   }, [rowQuery.data])
 
   useEffect(() => {
@@ -153,10 +136,33 @@ export function CatalogWizardPage() {
     setPriceTjs(rowQuery.data.priceTjs)
     setCategory(rowQuery.data.category as Category)
     setGender((rowQuery.data.gender as Gender) || 'female')
+    setModelType(((rowQuery.data.modelType as ModelType) || 'mid'))
   }, [isEdit, rowQuery.data])
 
   return (
     <div className="space-y-4">
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <img
+            src={lightboxUrl}
+            alt="Полный размер"
+            className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white hover:bg-white/30"
+            onClick={() => setLightboxUrl(null)}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <input
         ref={fileRef}
         type="file"
@@ -182,7 +188,6 @@ export function CatalogWizardPage() {
             URL.revokeObjectURL(objectUrl)
             setLocalPreview(null)
             showToast(`Фото «${file.name}» загружено`)
-            setStep(2)
           } catch (err) {
             const message = err instanceof Error ? err.message : 'Ошибка загрузки'
             setUploadBanner({ kind: 'error', message })
@@ -346,6 +351,8 @@ export function CatalogWizardPage() {
                     </select>
                   </div>
                 </div>
+
+                {/* Gender */}
                 <div className="grid gap-2">
                   <label className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Пол модели</label>
                   <div className="flex gap-2">
@@ -366,6 +373,28 @@ export function CatalogWizardPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Model body type */}
+                <div className="grid gap-2">
+                  <label className="text-xs font-normal text-neutral-800 dark:text-neutral-300">Типаж модели</label>
+                  <div className="flex flex-col gap-1.5">
+                    {(Object.entries(MODEL_TYPE_LABELS) as [ModelType, string][]).map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setModelType(key)}
+                        className={[
+                          'rounded-xl px-3 py-2 text-left text-sm font-medium ring-1 transition-colors',
+                          modelType === key
+                            ? 'bg-violet-600 text-white ring-violet-500 dark:bg-violet-500 dark:ring-violet-400'
+                            : 'bg-white text-neutral-900 ring-neutral-200 hover:bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-50 dark:ring-white/10 dark:hover:bg-neutral-900',
+                        ].join(' ')}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="pt-2">
@@ -380,73 +409,73 @@ export function CatalogWizardPage() {
 
       {step === 2 && (
         <Card className="p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-3">
             <div className="min-w-0">
-              <div className="text-sm font-semibold">Генерация типажей</div>
+              <div className="text-sm font-semibold">Генерация</div>
               <div className="mt-1 text-xs font-normal text-neutral-900 dark:text-neutral-300">
-                GPT-4o-mini + DALL·E 3 (три полноформатных кадра). Занимает 1–3 минуты.
+                Выбери модель и нажми — генерация запустится. Типаж: <span className="font-medium">{MODEL_TYPE_LABELS[modelType]}</span>
               </div>
-              <div className="mt-3 rounded-xl bg-neutral-50 p-3 text-xs leading-relaxed text-neutral-900 ring-1 ring-neutral-200 dark:bg-neutral-950/40 dark:text-neutral-300 dark:ring-white/10">
-                Ниже четыре превью:{' '}
-                <span className="font-medium text-neutral-950 dark:text-neutral-100">исходное фото</span> и три
-                типажа (высокий / средний / плотный). Генерация запускается автоматически после загрузки фото —
-                дождитесь статуса, затем шаг «Публикация».
-              </div>
-              {!canContinue1 && rowQuery.data?.sourceImageUrl && (
-                <div className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-500/35">
-                  Вернитесь на шаг 1 и заполните название товара — тогда генерация запустится автоматически.
-                </div>
-              )}
             </div>
-            <Button
-              className="w-full shrink-0 sm:w-auto sm:self-start"
-              disabled={isGenerating || rowQuery.data?.status === 'generating'}
-              onClick={async () => {
-                setIsGenerating(true)
-                let id = workingId
-                try {
-                  if (!id) {
-                    const res = await createCatalogItemDraft()
-                    id = res.id
-                    setWorkingId(id)
-                  }
-                  await updateCatalogRow({
-                    id,
-                    title: title.trim(),
-                    priceTjs,
-                    category,
-                    gender,
-                  })
-                  await triggerAiGeneration(id)
-                  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-                  let row = await getCatalogRow(id)
-                  for (let i = 0; i < 120; i++) {
-                    if (row.status !== 'generating') break
-                    await sleep(2000)
-                    row = await getCatalogRow(id)
-                  }
-                  if (row.generationError) {
-                    alert(row.generationError)
-                    setIsGenerating(false)
-                    return
-                  }
-                  if (row.status !== 'generated') {
-                    alert(`Генерация не завершена (статус: ${row.status})`)
-                    setIsGenerating(false)
-                    return
-                  }
-                  await rowQuery.refetch()
-                  setStep(3)
-                } catch (err) {
-                  alert(err instanceof Error ? err.message : 'Ошибка генерации')
-                } finally {
-                  setIsGenerating(false)
-                }
-              }}
-            >
-              <LuSparkles className="mr-2 h-4 w-4" />
-              {isGenerating ? 'Генерируем…' : 'Запустить'}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {((['openai', 'huggingface'] as const)).map((provider) => {
+                const isSuccess = rowQuery.data?.status === 'generated'
+                const isBusy = isGenerating || rowQuery.data?.status === 'generating'
+                const disabled = isBusy || isSuccess
+                return (
+                  <button
+                    key={provider}
+                    type="button"
+                    disabled={disabled}
+                    onClick={async () => {
+                      setAiProvider(provider)
+                      setIsGenerating(true)
+                      alreadyTriggeredRef.current = workingId
+                      let id = workingId
+                      try {
+                        if (!id) {
+                          const res = await createCatalogItemDraft()
+                          id = res.id
+                          setWorkingId(id)
+                          alreadyTriggeredRef.current = id
+                        }
+                        await updateCatalogRow({ id, title: title.trim(), priceTjs, category, gender, modelType })
+                        await triggerAiGeneration(id, provider)
+                        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+                        let row = await getCatalogRow(id)
+                        for (let i = 0; i < 120; i++) {
+                          if (row.status !== 'generating') break
+                          await sleep(2000)
+                          row = await getCatalogRow(id)
+                        }
+                        if (row.generationError) {
+                          showToast(row.generationError)
+                          return
+                        }
+                        if (row.status !== 'generated') {
+                          showToast(`Генерация не завершена (статус: ${row.status})`)
+                          return
+                        }
+                        await rowQuery.refetch()
+                        setStep(3)
+                      } catch (err) {
+                        showToast(err instanceof Error ? err.message : 'Ошибка генерации')
+                      } finally {
+                        setIsGenerating(false)
+                      }
+                    }}
+                    className={[
+                      'flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium ring-1 transition-colors',
+                      disabled
+                        ? 'cursor-not-allowed bg-neutral-100 text-neutral-400 ring-neutral-200 dark:bg-neutral-900 dark:text-neutral-600 dark:ring-white/10'
+                        : 'bg-violet-600 text-white ring-violet-500 hover:bg-violet-700 dark:bg-violet-500 dark:ring-violet-400 dark:hover:bg-violet-600',
+                    ].join(' ')}
+                  >
+                    <LuSparkles className="h-4 w-4 shrink-0" />
+                    {isGenerating && aiProvider === provider ? 'Генерируем…' : AI_PROVIDER_LABELS[provider]}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {rowQuery.data?.generationError && (
@@ -455,35 +484,36 @@ export function CatalogWizardPage() {
             </div>
           )}
 
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {(['original', 'tall', 'mid', 'curvy'] as const).map((k) => {
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {(['original', 'generated'] as const).map((k) => {
               const isGeneratingState = isGenerating || rowQuery.data?.status === 'generating'
               const showImage = k === 'original' || !isGeneratingState
+              const imgUrl = tiles[k]
+              const isFallback = imgUrl.startsWith('data:')
               return (
-                <div
-                  key={k}
-                  className={[
-                    'h-28 w-full overflow-hidden rounded-xl ring-1 ring-neutral-200 sm:h-32 md:h-36 dark:ring-white/10',
-                    isGeneratingState && k !== 'original'
-                      ? 'animate-pulse bg-neutral-200 dark:bg-neutral-900'
-                      : 'bg-neutral-100 dark:bg-neutral-950/60',
-                  ].join(' ')}
-                >
-                  {showImage && (
-                    <img
-                      src={tiles[k]}
-                      alt={
-                        k === 'original'
-                          ? 'Оригинал'
-                          : k === 'tall'
-                            ? 'Типаж высокий'
-                            : k === 'mid'
-                              ? 'Типаж средний'
-                              : 'Типаж плотный'
-                      }
-                      className="h-full w-full object-cover"
-                    />
-                  )}
+                <div key={k} className="space-y-1">
+                  <div className="text-center text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                    {k === 'original' ? 'Оригинал' : MODEL_TYPE_LABELS[modelType]}
+                  </div>
+                  <div
+                    className={[
+                      'relative h-48 w-full overflow-hidden rounded-xl ring-1 ring-neutral-200 sm:h-56 md:h-64 dark:ring-white/10',
+                      isGeneratingState && k !== 'original'
+                        ? 'animate-pulse bg-neutral-200 dark:bg-neutral-900'
+                        : 'bg-neutral-100 dark:bg-neutral-950/60',
+                      !isFallback && showImage ? 'cursor-zoom-in' : '',
+                    ].join(' ')}
+                    onClick={() => !isFallback && showImage && setLightboxUrl(imgUrl)}
+                  >
+                    {showImage && (
+                      <img src={imgUrl} alt={k === 'original' ? 'Оригинал' : 'Результат'} className="h-full w-full object-cover" />
+                    )}
+                    {!isFallback && showImage && (
+                      <div className="absolute bottom-2 right-2 rounded-lg bg-black/40 px-2 py-1 text-[10px] text-white backdrop-blur-sm">
+                        🔍 Открыть
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             })}
@@ -510,7 +540,7 @@ export function CatalogWizardPage() {
             <div className="min-w-0">
               <div className="text-sm font-semibold">Проверка и публикация</div>
               <div className="mt-1 text-xs font-normal text-neutral-900 dark:text-neutral-300">
-                Продавец видит оригинал + 3 типажа. Потом публикует.
+                Оригинал и сгенерированное фото на модели. Проверьте и опубликуйте.
               </div>
             </div>
             <Button
@@ -527,20 +557,18 @@ export function CatalogWizardPage() {
             </Button>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-3">
             {(
               [
                 ['Оригинал', tiles.original],
-                ['Высокий', tiles.tall],
-                ['Средний', tiles.mid],
-                ['Плотный', tiles.curvy],
+                [MODEL_TYPE_LABELS[modelType], tiles.generated],
               ] as const
             ).map(([label, url]) => (
               <div
                 key={label}
                 className="flex min-w-0 flex-col overflow-hidden rounded-xl ring-1 ring-neutral-200 dark:ring-white/10"
               >
-                <div className="h-28 w-full shrink-0 overflow-hidden bg-neutral-100 sm:h-32 md:h-36 dark:bg-neutral-950">
+                <div className="h-48 w-full shrink-0 overflow-hidden bg-neutral-100 sm:h-56 md:h-64 dark:bg-neutral-950">
                   <img src={url} alt={label} className="h-full w-full object-cover" />
                 </div>
                 <div className="truncate px-1 py-1 text-center text-[10px] font-normal text-neutral-900 sm:text-xs dark:text-neutral-300">
@@ -558,6 +586,8 @@ export function CatalogWizardPage() {
                 setTitle('')
                 setPriceTjs(199)
                 setCategory('tops')
+                setModelType('mid')
+                setAiProvider('openai')
                 setWorkingId(null)
                 setStep(1)
               }}

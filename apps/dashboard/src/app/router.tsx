@@ -11,6 +11,7 @@ import { ProfilePage } from '../pages/profile/profile-page'
 import { ForgotPasswordPage } from '../pages/auth/forgot-password-page'
 import { ResetPasswordPage } from '../pages/auth/reset-password-page'
 import { SellersPage } from '../pages/sellers/sellers-page'
+import { HfImageTestPage } from '../pages/dev/hf-image-test-page'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: 'profile', element: <ProfilePage /> },
       { path: 'shop', element: <Navigate to="/profile" replace /> },
       { path: 'sellers', element: <SellersPage /> },
+      { path: 'dev/hf-image', element: <HfImageTestPage /> },
     ],
   },
 ])

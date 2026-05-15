@@ -331,6 +331,7 @@ export async function updateCatalogRow(input: {
   priceTjs: number
   category: string
   gender: string
+  modelType?: string
 }): Promise<CatalogRowDto> {
   if (getApiMode() === 'mock') return mock.updateCatalogRow(input)
   return requestJson<CatalogRowDto>(`/v1/catalog/items/${encodeURIComponent(input.id)}`, {
@@ -360,14 +361,17 @@ export async function uploadCatalogPhoto(itemId: string, file: File): Promise<Ca
   return requestForm<CatalogRowDto>(`/v1/catalog/items/${encodeURIComponent(itemId)}/upload`, fd)
 }
 
-export async function triggerAiGeneration(itemId: string): Promise<{ queued: boolean }> {
+export async function triggerAiGeneration(
+  itemId: string,
+  provider: 'openai' | 'huggingface' = 'openai',
+): Promise<{ queued: boolean }> {
   if (getApiMode() === 'mock') {
     await setCatalogStatus({ id: itemId, status: 'generated' })
     return { queued: true }
   }
   return requestJson<{ queued: boolean }>(
     `/v1/catalog/items/${encodeURIComponent(itemId)}/generate-ai`,
-    { method: 'POST' },
+    { method: 'POST', body: JSON.stringify({ provider }) },
   )
 }
 
@@ -395,4 +399,91 @@ export async function uploadShopLogo(file: File): Promise<ShopProfileDto> {
   const fd = new FormData()
   fd.append('file', file)
   return requestForm<ShopProfileDto>('/v1/admin/shop-profile/logo', fd)
+}
+
+/** Dev: text-to-image via Hugging Face Inference API (server holds HF token). */
+export async function generateHfImageDev(input: {
+  prompt: string
+  modelId?: string
+}): Promise<Blob> {
+  if (getApiMode() === 'mock') {
+    throw new Error('VITE_API_MODE must be real for HF image test')
+  }
+  const baseUrl = getBaseUrl()
+  const body: { prompt: string; model_id?: string } = { prompt: input.prompt }
+  if (input.modelId?.trim()) body.model_id = input.modelId.trim()
+  const res = await fetch(`${baseUrl}/v1/dev/hf-image`, {
+    method: 'POST',
+    headers: {
+      ...adminAuthHeaders(),
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`API ${res.status}: ${text || res.statusText}`)
+  }
+  const ct = res.headers.get('content-type') ?? ''
+  if (!ct.startsWith('image/')) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Expected image/*, got ${ct || 'unknown'}: ${text.slice(0, 400)}`)
+  }
+  return res.blob()
+}
+
+/** Dev: get saved HF generation prompt. */
+export async function getHfPrompt(): Promise<{ prompt: string }> {
+  const baseUrl = getBaseUrl()
+  const res = await fetch(`${baseUrl}/v1/dev/hf-prompt`, {
+    headers: adminAuthHeaders(),
+  })
+  if (!res.ok) throw new Error(`API ${res.status}`)
+  return res.json() as Promise<{ prompt: string }>
+}
+
+/** Dev: save HF generation prompt used by catalog AI pipeline. */
+export async function saveHfPrompt(prompt: string): Promise<{ saved: boolean }> {
+  const baseUrl = getBaseUrl()
+  const res = await fetch(`${baseUrl}/v1/dev/hf-prompt`, {
+    method: 'POST',
+    headers: { ...adminAuthHeaders(), 'content-type': 'application/json' },
+    body: JSON.stringify({ prompt }),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`API ${res.status}: ${text}`)
+  }
+  return res.json() as Promise<{ saved: boolean }>
+}
+
+/** Dev: image-to-image via Hugging Face Inference API (instruct-pix2pix etc.). */
+export async function generateHfImg2ImgDev(input: {
+  prompt: string
+  image: File
+  modelId?: string
+}): Promise<Blob> {
+  if (getApiMode() === 'mock') {
+    throw new Error('VITE_API_MODE must be real for HF img2img test')
+  }
+  const baseUrl = getBaseUrl()
+  const fd = new FormData()
+  fd.append('prompt', input.prompt)
+  fd.append('image', input.image)
+  if (input.modelId?.trim()) fd.append('model_id', input.modelId.trim())
+  const res = await fetch(`${baseUrl}/v1/dev/hf-img2img`, {
+    method: 'POST',
+    headers: adminAuthHeaders(),
+    body: fd,
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`API ${res.status}: ${text || res.statusText}`)
+  }
+  const ct = res.headers.get('content-type') ?? ''
+  if (!ct.startsWith('image/')) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Expected image/*, got ${ct || 'unknown'}: ${text.slice(0, 400)}`)
+  }
+  return res.blob()
 }
