@@ -12,7 +12,7 @@ import { ForgotPasswordPage } from '../pages/auth/forgot-password-page'
 import { ResetPasswordPage } from '../pages/auth/reset-password-page'
 import { SellersPage } from '../pages/sellers/sellers-page'
 import { HfImageTestPage } from '../pages/dev/hf-image-test-page'
-import { RequestLogsPage } from '../pages/logs/request-logs-page'
+import { RequestLogsPage } from '../pages/request-logs/request-logs-page'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },

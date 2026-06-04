@@ -6,6 +6,7 @@ import {
   endImpersonation,
   fetchAnalyticsTimeseries,
   fetchAuthMe,
+  fetchRequestLogs,
   getCatalogRow,
   getDashboardApiMode,
   getOrderDetails,
@@ -217,5 +218,18 @@ export function useUploadShopLogoMutation() {
     onSuccess: (data) => {
       qc.setQueryData(queryKeys.shopProfile(), data)
     },
+  })
+}
+
+export function useRequestLogsQuery(
+  page: number,
+  limit: number,
+  filter: 'all' | 'generation' | 'non_generation',
+) {
+  return useQuery({
+    queryKey: ['requestLogs', page, limit, filter],
+    queryFn: () => fetchRequestLogs(page, limit, filter),
+    staleTime: 10_000,
+    enabled: dashboardQueriesEnabled(),
   })
 }
