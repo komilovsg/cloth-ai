@@ -457,6 +457,16 @@ export async function saveHfPrompt(prompt: string): Promise<{ saved: boolean }> 
   return res.json() as Promise<{ saved: boolean }>
 }
 
+export async function fetchRequestLogs(
+  page = 1,
+  limit = 50,
+  filter: 'all' | 'generation' | 'non_generation' = 'all',
+): Promise<import('./types').RequestLogsResponseDto> {
+  if (getApiMode() === 'mock') return mock.fetchRequestLogs(page, limit, filter)
+  const qs = new URLSearchParams({ page: String(page), limit: String(limit), filter })
+  return requestJson(`/v1/admin/request-logs?${qs}`)
+}
+
 /** Dev: image-to-image via Hugging Face Inference API (instruct-pix2pix etc.). */
 export async function generateHfImg2ImgDev(input: {
   prompt: string

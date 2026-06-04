@@ -1,3 +1,4 @@
+import { randomUUID } from '../random-uuid'
 import { MOCK_CATALOG } from '../../features/catalog/mock-catalog'
 import type {
   CatalogListResponse,
@@ -33,7 +34,7 @@ export async function createOrder(
     return sum + p.priceTjs * i.qty
   }, 0)
 
-  const orderId = crypto.randomUUID()
+  const orderId = randomUUID()
   const status =
     req.method === 'online'
       ? 'created'

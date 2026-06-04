@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ProductSize } from '@cloth-ai/contracts'
+import { randomUUID } from '../../shared/random-uuid'
 
 export type CartItemKind = 'top' | 'bottom' | 'single'
 
@@ -38,7 +39,7 @@ export const useCartStore = create<CartState>()(
           return {
             items: [
               ...state.items,
-              { id: crypto.randomUUID(), kind, productId, size, qty },
+              { id: randomUUID(), kind, productId, size, qty },
             ],
           }
         }),

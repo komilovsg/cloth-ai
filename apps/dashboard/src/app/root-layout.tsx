@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useLayoutEffect, useState } from 'react'
 import { setAdminToken } from './auth-gate'
 import {
+  LuActivity,
   LuChevronLeft,
   LuChevronRight,
   LuLayoutDashboard,
@@ -215,6 +216,14 @@ export function RootLayout() {
           onNavigate={closeMobile}
         />
       )}
+      <SidebarLink
+        to="/logs"
+        label="Запросы API"
+        icon={<LuActivity className="h-5 w-5" />}
+        collapsed={navCollapsed}
+        light={light}
+        onNavigate={closeMobile}
+      />
       <SidebarLink
         to="/dev/hf-image"
         label="HF: тест картинки"

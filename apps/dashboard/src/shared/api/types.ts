@@ -86,3 +86,22 @@ export interface AnalyticsTimeseriesPointDto {
 export interface AnalyticsTimeseriesDto {
   points: AnalyticsTimeseriesPointDto[]
 }
+
+export interface RequestLogDto {
+  id: string
+  timestamp: string
+  method: string
+  path: string
+  status_code: number
+  duration_ms: number
+  is_generation: boolean
+  seller_id: string | null
+  ip: string | null
+}
+
+export interface RequestLogsResponseDto {
+  total: number
+  page: number
+  limit: number
+  items: RequestLogDto[]
+}

@@ -1,4 +1,5 @@
 import type { CatalogListResponse, GetOrderResponse, OrderStatus } from '@cloth-ai/contracts'
+import { randomUUID } from '../random-uuid'
 import { MOCK_ORDERS } from '../../features/orders/mock-orders'
 import type {
   AnalyticsTimeseriesDto,
@@ -100,7 +101,7 @@ export async function getCatalog(): Promise<CatalogListResponse> {
 
 export async function createCatalogItemDraft(): Promise<{ id: string }> {
   await sleep(300)
-  const id = crypto.randomUUID()
+  const id = randomUUID()
   const now = new Date().toISOString()
   catalogStore.set(id, {
     id,
@@ -313,6 +314,22 @@ export async function endImpersonation(): Promise<void> {
     sellerId: null,
     impersonation: false,
   }
+}
+
+export async function fetchRequestLogs(
+  page: number,
+  _limit: number,
+  filter: 'all' | 'generation' | 'non_generation',
+): Promise<import('./types').RequestLogsResponseDto> {
+  await sleep(150)
+  const MOCK: import('./types').RequestLogDto[] = [
+    { id: '1', timestamp: new Date(Date.now() - 5000).toISOString(), method: 'POST', path: '/v1/catalog/items/abc/generate-ai', status_code: 200, duration_ms: 8420, is_generation: true, seller_id: null, ip: '127.0.0.1' },
+    { id: '2', timestamp: new Date(Date.now() - 15000).toISOString(), method: 'GET', path: '/v1/catalog/items', status_code: 200, duration_ms: 42, is_generation: false, seller_id: null, ip: '127.0.0.1' },
+    { id: '3', timestamp: new Date(Date.now() - 60000).toISOString(), method: 'POST', path: '/v1/auth/login', status_code: 200, duration_ms: 210, is_generation: false, seller_id: null, ip: '127.0.0.1' },
+    { id: '4', timestamp: new Date(Date.now() - 120000).toISOString(), method: 'POST', path: '/v1/catalog/items/xyz/generate-ai', status_code: 200, duration_ms: 9100, is_generation: true, seller_id: null, ip: '127.0.0.1' },
+  ]
+  const filtered = filter === 'all' ? MOCK : MOCK.filter(r => filter === 'generation' ? r.is_generation : !r.is_generation)
+  return { total: filtered.length, page, limit: _limit, items: filtered }
 }
 
 export async function fetchAnalyticsTimeseries(from: string, to: string): Promise<AnalyticsTimeseriesDto> {
